@@ -1,0 +1,11 @@
+{
+  "id": "pytest-kos",
+  "level": "L0",
+  "applies_to": [
+    "python-tool"
+  ],
+  "tags": [],
+  "verify": "pytest -q",
+  "created": "2026-09-01T22:15:53+00:00",
+  "archived": false
+}

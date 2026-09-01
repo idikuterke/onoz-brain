@@ -1,0 +1,11 @@
+{
+  "id": "web-build-dogrulama",
+  "level": "L0",
+  "applies_to": [
+    "web"
+  ],
+  "tags": [],
+  "verify": "npm run build",
+  "created": "2026-09-01T22:15:53+00:00",
+  "archived": false
+}

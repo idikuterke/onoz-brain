@@ -1,0 +1,15 @@
+{
+  "id": "godot-scene-smoke-test",
+  "level": "L0",
+  "applies_to": [
+    "godot"
+  ],
+  "tags": [
+    "godot",
+    "test",
+    "ci"
+  ],
+  "verify": "python test.py",
+  "created": "2026-09-02T00:00:00+00:00",
+  "archived": false
+}

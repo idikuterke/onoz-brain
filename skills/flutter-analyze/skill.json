@@ -1,0 +1,11 @@
+{
+  "id": "flutter-analyze",
+  "level": "L0",
+  "applies_to": [
+    "flutter"
+  ],
+  "tags": [],
+  "verify": "flutter analyze",
+  "created": "2026-09-01T22:15:52+00:00",
+  "archived": false
+}
