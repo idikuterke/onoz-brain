@@ -6,7 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-ERROR_MARKERS = ("SCRIPT ERROR", "ERROR:", "Failed to load", "Parse Error")
+ERROR_MARKERS = ("SCRIPT ERROR", "Parse Error", "Failed to load", "Failed loading resource")
 
 
 def main() -> int:
@@ -29,7 +29,7 @@ def main() -> int:
 
     cmd = [exe, "--headless", "--quit-after", "2", "--path", str(project), args.scene]
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=args.timeout)
+        proc = subprocess.run(cmd, capture_output=True, encoding="utf-8", errors="replace", timeout=args.timeout)
     except subprocess.TimeoutExpired:
         print(f"HATA: {args.timeout}s icinde bitmedi (muhtemel sonsuz dongu).", file=sys.stderr)
         return 3

@@ -1,0 +1,1 @@
+- **repo-sanity-check**: Arsiv teslim etmeden once girdi listesi taranir: { } veya bos dizin varsa teslim yok

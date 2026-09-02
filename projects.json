@@ -1,1 +1,80 @@
-{}
+{
+  "kutun-arinisi": {
+    "path": "C:\\Users\\pc\\Tunga",
+    "type": "godot",
+    "tags": [
+      "gdscript",
+      "godot",
+      "rpg"
+    ],
+    "linked": "2026-09-01T22:36:14+00:00"
+  },
+  "gokyazi": {
+    "path": "C:\\Users\\pc\\YAZGI",
+    "type": "flutter",
+    "tags": [
+      "dart",
+      "flutter",
+      "mobile"
+    ],
+    "linked": "2026-09-02T06:05:59+00:00"
+  },
+  "onoz-web": {
+    "path": "C:\\Users\\pc\\onozlabs",
+    "type": "web",
+    "tags": [
+      "nextjs",
+      "ts",
+      "web"
+    ],
+    "linked": "2026-09-01T22:36:14+00:00"
+  },
+  "gokturk-studio": {
+    "path": "C:\\Users\\pc\\gokturk_studio",
+    "type": "python-tool",
+    "tags": [
+      "cv",
+      "ml",
+      "python-tool"
+    ],
+    "linked": "2026-09-01T22:36:14+00:00"
+  },
+  "rota": {
+    "path": "C:\\Users\\pc\\Girisimlerim\\Rota",
+    "type": "flutter",
+    "tags": [
+      "dart",
+      "flutter"
+    ],
+    "linked": "2026-09-01T22:36:14+00:00"
+  },
+  "gokyuzu-gunlugu": {
+    "path": "C:\\Users\\pc\\tengri_fast_app",
+    "type": "flutter",
+    "tags": [
+      "dart",
+      "flutter",
+      "offline"
+    ],
+    "linked": "2026-09-02T06:06:00+00:00"
+  },
+  "onoz-idle": {
+    "path": "C:\\Users\\pc\\Unity Projeleri\\OnozIdle",
+    "type": "unity",
+    "tags": [
+      "idle",
+      "mobile",
+      "unity"
+    ],
+    "linked": "2026-09-02T06:06:00+00:00"
+  },
+  "career-ops": {
+    "path": "C:\\Users\\pc\\Documents\\antigravity\\intelligent-newton",
+    "type": "web",
+    "tags": [
+      "automation",
+      "web"
+    ],
+    "linked": "2026-09-02T06:06:00+00:00"
+  }
+}
