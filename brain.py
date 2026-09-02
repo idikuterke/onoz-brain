@@ -900,8 +900,10 @@ def collect_status(brain: Brain) -> list[dict]:
         row = {"name": name, "type": meta.get("type", "?"), "path": str(path),
                "exists": path.exists(), "branch": "-", "last_commit": "-",
                "days": None, "dirty": None, "commits_30d": None,
-               "evals": {}, "runs": len(brain.runs(project=name))}
+               "evals": {}, "has_status": False,
+               "runs": len(brain.runs(project=name))}
         if path.exists():
+            row["has_status"] = (path / "STATUS.md").exists()
             row["branch"] = git(path, "rev-parse", "--abbrev-ref", "HEAD") or "-"
             iso = git(path, "log", "-1", "--format=%cI")
             if iso:
@@ -1004,10 +1006,17 @@ def cmd_status(brain: Brain, args) -> int:
             print(f"   {d.get('project','?')} / {d.get('task','?')}  "
                   f"-> brain trial finish|abort")
 
-    missing = [r["name"] for r in rows if r["exists"] and not r.get("Siradaki")]
-    if missing:
-        print(f"\nSTATUS.md eksik/bos: {', '.join(missing)}")
-        print("Sablon: brain status --template > <proje>/STATUS.md")
+    # Dosyasi olmayan ile 'Siradaki' satiri bos olani ayir: ikincisine sablon
+    # komutu onerilmemeli, o komut mevcut Durum satirini EZER.
+    no_file = [r["name"] for r in rows if r["exists"] and not r["has_status"]]
+    no_next = [r["name"] for r in rows
+               if r["exists"] and r["has_status"] and not r.get("Siradaki")]
+    if no_file:
+        print(f"\nSTATUS.md yok: {', '.join(no_file)}")
+        print("  brain status --template > <proje>/STATUS.md")
+    if no_next:
+        print(f"\n'Siradaki' satiri bos: {', '.join(no_next)}")
+        print("  Dosyalari elle duzenle - sablon komutu mevcut Durum satirini SILER.")
     return 0
 
 

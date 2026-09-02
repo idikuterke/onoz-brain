@@ -54,6 +54,10 @@ sonundaki gercek-durum tablosunu okur.
    sinava giremez. KA-A07 ve benzeri ajan gorevleri, sadece `brain context`
    brifingi alan AYRI ve temiz bir oturumda cozdurulur. Tasarimci oturum yalnizca
    olcum (setup / eval / teardown) tarafinda kalir.
+8. **Ozellik Dondurma (Feature Freeze - 10 kosu bariyeri)**: `brain stats` en az
+   10 gercek kosuya ulasana kadar `brain.py`'ye YENI OZELLIK EKLENMEZ. Yalnizca
+   hata duzeltmesi yapilabilir. Sistem kendini besleyecek veri birikmeden
+   motor olcecegi isten hizli buyutulmez.
 
 ## Tunga (kutun-arinisi) ozel durumu
 

@@ -1,0 +1,27 @@
+{
+  "ts": "2026-09-02T12:12:42+00:00",
+  "project": "gokturk-vision",
+  "passed": 3,
+  "total": 3,
+  "pass_rate": 1.0,
+  "results": [
+    {
+      "id": "GV-01",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "GV-02",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "GV-03",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    }
+  ]
+}
