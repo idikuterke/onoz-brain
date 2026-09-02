@@ -16,14 +16,12 @@ sonundaki gercek-durum tablosunu okur.
     --require-line = sessiz-hata kapani).
   - evals/_helpers/break.py: deterministik bozma kancalari (Tunga'ya
     kalibre; her kancanin kaniti dosya basindaki notlarda).
-- **Baselineler** (memory/evals/*.json): PROJE SAGLIGI 8/10 (%80) -
-  20260902-094237; AJAN OTONOMISI 0/2 (%0) - 20260902-100844.
-  Yukseltilecek sayi ajan otonomisi.
-- **Gorev sirasi** (upstream karari): 1) KA-A07 (etkilesim zinciri mutasyon
-  testi), 2) KA-A05 (Yelbegen testi), 3) KA-A06 (save round-trip - henuz
-  yazilmadi). KA-A01 ancak KA-A07 kapatildiktan sonra eklenebilir (kor
-  nokta: npc-signal bozmasi mevcut paketle yakalanmiyor - kaniti break.py
-  notlarinda).
+- **Baselineler ve Otonomi Kayitlari**:
+  - PROJE SAGLIGI: 8/10 (%80) - `memory/evals/20260902-094237-kutun-arinisi.json`
+  - AJAN OTONOMISI: KA-A07 ilk basarili iki-fazli trial ile tescillendi (%100, exit 0) -
+    `memory/evals/20260902-114229-kutun-arinisi.json`.
+  - PROJE SICILI (`brain stats`): 1 gercek kosu (`gokyazi` / `flutter-test-kos`), %100 otonomi, 3 dk inceleme.
+- **Gorev sirasi**: 1) KA-A07 (TAMAMLANDI - `tests/test_etkilesim_zinciri.gd` yazildi, mutasyon kanitlandi ve Tunga'ya commit'lendi `f8386e2`), 2) KA-A05 (Yelbegen testi), 3) KA-A06 (save round-trip).
 - **brain status / activity / dashboard** komutlari calisiyor; pano:
   memory/dashboard.html (tek dosya, offline).
 - Lesson kaydi: memory/lessons/20260901-223605-repo-sanity-check.md.
@@ -80,5 +78,6 @@ brain status                                            # proje tablosu (SAGLIK 
 brain activity --days 30 --exclude career-ops           # commit siniflandirma
 brain dashboard --days 30 --exclude career-ops --open   # pano
 brain eval kutun-arinisi --kind regression --record     # %80 (8/10)
-brain eval kutun-arinisi --kind agent --record          # %0 (0/2, yukseltilecek sayi)
+brain trial start kutun-arinisi <TASK>                  # iki-fazli ajan denemesi baslat
+brain trial finish kutun-arinisi <TASK> --record        # dogrula ve kaydet
 ```
