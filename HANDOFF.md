@@ -76,9 +76,8 @@ sonundaki gercek-durum tablosunu okur.
 
 ## Acik kalemler (kullanici isi)
 
-- **Git Remote Push**: `origin` eklendi (`https://github.com/idikuterke/onoz-brain.git`).
-  GitHub'da `onoz-brain` reposu acildiktan sonra tek komutla push edilecek:
-  `git push -u origin master`
+- **Git Remote Push**: TAMAMLANDI (`https://github.com/idikuterke/onoz-brain`).
+  Public repo devrede, tum gecmis ve eval kayitlari GitHub'da guvence altinda.
 - **STATUS.md Triyaji**: Uykudaki projeler (rota, onoz-idle vb.) panoyu kirletmemek
   icin bos birakilacak; son donemde aktif 5 projenin `Siradaki` satirlari girilecek:
   `kutun-arinisi`, `gokturk-studio`, `onoz-web`, `gokturk-vision`, `gokturk-verify`.
