@@ -62,8 +62,13 @@ def now_iso() -> str:
 
 def brain_home() -> Path:
     raw = os.environ.get("BRAIN_HOME")
-    root = Path(raw).expanduser() if raw else Path.home() / "onoz-brain"
-    return root.resolve()
+    if raw:
+        return Path(raw).expanduser().resolve()
+    for name in ("onoz-brain", "onozbrain"):
+        cand = Path.home() / name
+        if (cand / "skills").exists():
+            return cand.resolve()
+    return (Path.home() / "onoz-brain").resolve()
 
 
 def read_json(path: Path, default=None):
@@ -356,7 +361,7 @@ def cmd_list(brain: Brain, args) -> int:
 
     print(f"{'SEVIYE':<7} {'BECERI':<34} {'KOSU':>5} {'BASARI':>7} {'SON':>6}")
     print("-" * 64)
-    for s in sorted(skills, key=lambda x: (LEVELS.index(x["level"]), x["id"]), reverse=True):
+    for s in sorted(skills, key=lambda x: (-LEVELS.index(x["level"]), x["id"])):
         runs = brain.runs(skill_id=s["id"])
         st = summarize(runs)
         last = runs[-1]["ts"] if runs else s.get("created", "")
@@ -497,6 +502,16 @@ def cmd_promote(brain: Brain, args) -> int:
 
 
 
+
+def expand_tokens(cmd: str, brain_root: Path, project_dir: Path) -> str:
+    """Platform bagimsiz jeton genisletme. cmd.exe $VAR bilmez, PowerShell %VAR% bilmez."""
+    for token in ("$BRAIN_HOME", "${BRAIN_HOME}", "%BRAIN_HOME%"):
+        cmd = cmd.replace(token, str(brain_root))
+    for token in ("$PROJECT_DIR", "${PROJECT_DIR}", "%PROJECT_DIR%"):
+        cmd = cmd.replace(token, str(project_dir))
+    return cmd
+
+
 def cmd_eval(brain: Brain, args) -> int:
     """Sabit gorev setini calistirir. Sistemin butununun olcum aletidir."""
     brain.require()
@@ -515,10 +530,22 @@ def cmd_eval(brain: Brain, args) -> int:
         except json.JSONDecodeError as exc:
             raise BrainError(f"Bozuk eval gorevi {path.name}:{lineno} ({exc})") from exc
 
+    for t in tasks:
+        try:
+            t["timeout"] = int(t.get("timeout", 120))
+        except (TypeError, ValueError):
+            raise BrainError(f"Gorev {t.get('id','?')}: timeout sayisal olmali, "
+                             f"bulunan: {t.get('timeout')!r}")
+        t.setdefault("kind", "regression")
+
     if args.task:
         tasks = [t for t in tasks if t.get("id") == args.task]
         if not tasks:
             raise BrainError(f"Gorev bulunamadi: {args.task}")
+    if args.kind != "all":
+        tasks = [t for t in tasks if t["kind"] == args.kind]
+        if not tasks:
+            raise BrainError(f"'{args.kind}' turunde gorev yok.")
 
     cwd = Path(proj["path"])
     if not cwd.exists():
@@ -532,16 +559,29 @@ def cmd_eval(brain: Brain, args) -> int:
             flag = " [DUZELTME GEREKIR]" if t.get("needs_adjust") else ""
             print(f"{tid}  {title}{flag}\n      $ {t.get('verify','')}")
             continue
+        def sh(cmd, tmo):
+            return subprocess.run(expand_tokens(cmd, brain.root, cwd), shell=True,
+                                  cwd=str(cwd), env=env, capture_output=True,
+                                  text=True, encoding="utf-8", errors="replace",
+                                  timeout=tmo)
         try:
-            proc = subprocess.run(t["verify"], shell=True, cwd=str(cwd), env=env,
-                                  capture_output=True, text=True,
-                                  timeout=int(t.get("timeout", 120)))
+            if t.get("setup"):
+                sp = sh(t["setup"], t["timeout"])
+                if sp.returncode != 0:
+                    raise RuntimeError(f"setup basarisiz exit={sp.returncode}")
+            proc = sh(t["verify"], t["timeout"])
             ok, detail = proc.returncode == 0, f"exit={proc.returncode}"
         except subprocess.TimeoutExpired:
             ok, detail = False, "TIMEOUT"
-        except OSError as exc:
-            ok, detail = False, f"calistirilamadi: {exc}"
-        results.append({"id": tid, "ok": ok, "detail": detail})
+        except (OSError, RuntimeError) as exc:
+            ok, detail = False, str(exc)
+        finally:
+            if t.get("teardown"):
+                try:
+                    sh(t["teardown"], t["timeout"])
+                except (OSError, subprocess.TimeoutExpired) as exc:
+                    print(f"  [uyari] teardown basarisiz {tid}: {exc}", file=sys.stderr)
+        results.append({"id": tid, "ok": ok, "detail": detail, "kind": t["kind"]})
         print(f"[{'GECTI' if ok else 'KALDI'}] {tid}  {title}" + ("" if ok else f"  ({detail})"))
 
     if args.dry_run:
@@ -549,9 +589,15 @@ def cmd_eval(brain: Brain, args) -> int:
         return 0
 
     passed = sum(1 for r in results if r["ok"])
-    total = len(results) or 1
-    rate = passed / total
-    print(f"\nPASS RATE: {passed}/{len(results)} = %{rate*100:.1f}")
+    rate = passed / (len(results) or 1)
+    print("")
+    for kind in ("regression", "agent"):
+        grp = [r for r in results if r["kind"] == kind]
+        if grp:
+            gp = sum(1 for r in grp if r["ok"])
+            label = "PROJE SAGLIGI" if kind == "regression" else "AJAN OTONOMISI"
+            print(f"{label:<16} {gp}/{len(grp)} = %{gp/len(grp)*100:.1f}")
+    print(f"{'TOPLAM':<16} {passed}/{len(results)} = %{rate*100:.1f}")
 
     if args.record:
         stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
@@ -625,6 +671,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--task", help="tek gorev id (KA-04 gibi)")
     sp.add_argument("--dry-run", action="store_true")
     sp.add_argument("--record", action="store_true", help="sonucu memory/evals altina yaz")
+    sp.add_argument("--kind", choices=["all", "regression", "agent"], default="all")
     sp.set_defaults(fn=cmd_eval)
 
     return p

@@ -7,3 +7,6 @@ __pycache__/
 # Kosu kayitlari commit EDILIR (sicilin kendisi budur).
 # Sadece yerel gecici dosyalar disarida:
 memory/**/*.tmp
+
+# Yerel yollar iceriyor, public repoda paylasilmaz
+projects.json
