@@ -10,3 +10,5 @@ memory/**/*.tmp
 
 # Yerel yollar iceriyor, public repoda paylasilmaz
 projects.json
+
+memory/dashboard.html
