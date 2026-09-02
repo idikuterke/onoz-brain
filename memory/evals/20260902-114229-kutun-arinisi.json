@@ -9,7 +9,8 @@
       "id": "KA-A07",
       "ok": true,
       "detail": "exit=0",
-      "kind": "agent"
+      "kind": "agent-restore"
     }
-  ]
+  ],
+  "note": "cozum git checkout ile geri alindi, ajan kosusu degil"
 }

@@ -528,6 +528,8 @@ def cmd_promote(brain: Brain, args) -> int:
     return 0
 
 
+
+
 def expand_tokens(cmd: str, brain_root: Path, project_dir: Path) -> str:
     """Platform bagimsiz jeton genisletme. cmd.exe $VAR bilmez, PowerShell %VAR% bilmez."""
     for token in ("$BRAIN_HOME", "${BRAIN_HOME}", "%BRAIN_HOME%"):
@@ -535,6 +537,7 @@ def expand_tokens(cmd: str, brain_root: Path, project_dir: Path) -> str:
     for token in ("$PROJECT_DIR", "${PROJECT_DIR}", "%PROJECT_DIR%"):
         cmd = cmd.replace(token, str(project_dir))
     return cmd
+
 
 
 def assert_tree_safe(project_dir: Path, tasks: list[dict], allow_dirty: bool) -> None:
@@ -658,6 +661,15 @@ def cmd_trial(brain: Brain, args) -> int:
                          f"Regresyon gorevleri icin: brain eval")
     pend = trial_path(brain, args.project, args.task)
 
+    if args.action == "finish" and not args.solver:
+        raise BrainError(
+            "Cozumun nasil uretildigini bildirmelisin: --solver\n\n"
+            "  cold     : sifir baglamli ayri oturum, sadece 'brain context' + prompt aldi\n"
+            "             -> OTONOMI egrisine yazilir\n"
+            "  assisted : ajan ek baglam gordu (bu sohbet, cozum ipucu, gorev tasarimi)\n"
+            "  restore  : cozum zaten vardi / git'ten geri alindi, ajan calismadi\n\n"
+            "Yalniz 'cold' otonomi sayilir. Digerleri kayda gecer ama egriyi kirletmez.")
+
     if args.action == "start":
         if pend.exists():
             raise BrainError(f"Bu deneme zaten acik: {pend}\n"
@@ -713,9 +725,16 @@ def cmd_trial(brain: Brain, args) -> int:
           + ("" if ok else f"  ({detail})"))
     for line in tail:
         print("   " + line[:100])
+
+    # Yalniz 'cold' otonomi egrisine yazilir. Digerleri ayri kind ile kaydedilir,
+    # boylece status/dashboard OTONOMI sutunu kirlenmez.
+    kind = "agent" if args.solver == "cold" else f"agent-{args.solver}"
+    if args.solver != "cold":
+        print(f"NOT: solver={args.solver} -> bu kayit OTONOMI sayilmaz "
+              f"(kind={kind}). Otonomi icin sifir baglamli oturum gerekir.")
     if args.record:
         out = record_eval(brain, args.project, [{"id": args.task, "ok": ok,
-                                                 "detail": detail, "kind": "agent"}])
+                                                 "detail": detail, "kind": kind}])
         print(f"Kaydedildi: {out}")
     else:
         print("Kaydetmek icin: --record")
@@ -814,6 +833,7 @@ def cmd_eval(brain: Brain, args) -> int:
     else:
         print("Kaydetmek icin: --record  (baseline'i mutlaka kaydet)")
     return 0 if passed == len(results) else 1
+
 
 
 # --------------------------------------------------------------------------
@@ -1114,10 +1134,14 @@ def cmd_dashboard(brain: Brain, args) -> int:
     return 0
 
 
+
 # --------------------------------------------------------------------------
 # Etkinlik: commit mesajlarindan anlamli ozet
 # --------------------------------------------------------------------------
 
+# Turkce + Ingilizce anahtar kelimeler. Conventional commit varsa o oncelikli.
+# Sira onemli: ozgul kategoriler once. Eslesme KELIME SINIRIYLA yapilir --
+# alt-dizgi eslesmesi "yeniden" icindeki "yeni"yi yakalayip yanlis siniflar.
 KIND_KEYWORDS = [
     ("asset",    ("asset", "sprite", "texture", "atlas", "mesh", "model", "ses", "muzik",
                   "müzik", "gorsel", "görsel", "ikon", "shader", "animasyon")),
@@ -1345,6 +1369,8 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("task", nargs="?")
     sp.add_argument("--record", action="store_true")
     sp.add_argument("--allow-dirty", action="store_true")
+    sp.add_argument("--solver", choices=["cold", "assisted", "restore"],
+                    help="cozumu kim uretti (finish icin zorunlu)")
     sp.set_defaults(fn=cmd_trial)
 
     return p

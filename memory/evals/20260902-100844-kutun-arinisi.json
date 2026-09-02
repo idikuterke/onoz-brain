@@ -9,13 +9,14 @@
       "id": "KA-A05",
       "ok": false,
       "detail": "exit=1",
-      "kind": "agent"
+      "kind": "agent-baseline"
     },
     {
       "id": "KA-A07",
       "ok": false,
       "detail": "exit=1",
-      "kind": "agent"
+      "kind": "agent-baseline"
     }
-  ]
+  ],
+  "note": "eski gecersiz tek komutlu olcum"
 }
