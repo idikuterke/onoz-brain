@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import html
 import re
 import subprocess
 import sys
@@ -611,6 +612,379 @@ def cmd_eval(brain: Brain, args) -> int:
     return 0 if passed == len(results) else 1
 
 
+
+# --------------------------------------------------------------------------
+# Durum toplama (otomatik turetilen + STATUS.md)
+# --------------------------------------------------------------------------
+
+STATUS_KEYS = ("Durum", "Siradaki", "Engel")
+
+
+def git(path: Path, *args: str) -> str | None:
+    """Git komutu calistirir. Repo degilse / git yoksa None doner, patlamaz."""
+    try:
+        proc = subprocess.run(["git", "-C", str(path), *args], capture_output=True,
+                              text=True, encoding="utf-8", errors="replace", timeout=15)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return proc.stdout.strip() if proc.returncode == 0 else None
+
+
+def read_status_md(project_dir: Path) -> dict:
+    """Projedeki STATUS.md'den 3 alani okur. Yoksa bos doner - zorunlu degil."""
+    out = {k: "" for k in STATUS_KEYS}
+    path = project_dir / "STATUS.md"
+    if not path.exists():
+        return out
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return out
+    for line in text.splitlines():
+        for key in STATUS_KEYS:
+            m = re.match(rf"^\s*[-*]?\s*{key}\s*:\s*(.+)$", line, re.IGNORECASE)
+            if m:
+                out[key] = m.group(1).strip()
+    return out
+
+
+def latest_eval(brain: Brain, project: str) -> dict | None:
+    files = sorted((brain.root / "memory" / "evals").glob(f"*-{project}.json"))
+    if not files:
+        return None
+    try:
+        return json.loads(files[-1].read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def collect_status(brain: Brain) -> list[dict]:
+    rows = []
+    for name, meta in sorted(brain.projects().items()):
+        path = Path(meta["path"])
+        row = {"name": name, "type": meta.get("type", "?"), "path": str(path),
+               "exists": path.exists(), "branch": "-", "last_commit": "-",
+               "days": None, "dirty": None, "commits_30d": None,
+               "eval": None, "runs": len(brain.runs(project=name))}
+        if path.exists():
+            row["branch"] = git(path, "rev-parse", "--abbrev-ref", "HEAD") or "-"
+            iso = git(path, "log", "-1", "--format=%cI")
+            if iso:
+                row["days"] = days_since(iso)
+                row["last_commit"] = (git(path, "log", "-1", "--format=%s") or "")[:60]
+            porcelain = git(path, "status", "--porcelain")
+            if porcelain is not None:
+                row["dirty"] = len([l for l in porcelain.splitlines() if l.strip()])
+            recent = git(path, "log", "--since=30.days", "--format=%h")
+            if recent is not None:
+                row["commits_30d"] = len([l for l in recent.splitlines() if l.strip()])
+            row.update(read_status_md(path))
+        ev = latest_eval(brain, name)
+        if ev:
+            row["eval"] = ev
+        rows.append(row)
+    return rows
+
+
+STATUS_TEMPLATE = """# Durum
+
+Durum: <tek cumle - proje su an nerede>
+Siradaki: <tek cumle - bir sonraki somut adim>
+Engel: <varsa tek cumle, yoksa bos birak>
+
+<!-- Uc satir. Daha fazlasi yazma; bu dosya gorev takipcisi degil,
+     panoda gorunecek ozet. Degistiginde guncelle, haftalik ritual yapma. -->
+"""
+
+
+def cmd_status(brain: Brain, args) -> int:
+    if args.template:
+        print(STATUS_TEMPLATE)
+        return 0
+    brain.require()
+    rows = collect_status(brain)
+    if not rows:
+        print("Kayitli proje yok. 'brain link' ile ekle.")
+        return 0
+    print(f"{'PROJE':<18}{'TIP':<13}{'DAL':<12}{'SON':>5}{'KIRLI':>7}{'30G':>5}{'EVAL':>7}")
+    print("-" * 70)
+    for r in rows:
+        if not r["exists"]:
+            print(f"{r['name']:<18}{'DIZIN YOK':<13}{r['path'][:40]}")
+            continue
+        ev = f"%{r['eval']['pass_rate']*100:.0f}" if r["eval"] else "-"
+        days = f"{r['days']}g" if r["days"] is not None else "-"
+        print(f"{r['name']:<18}{r['type']:<13}{r['branch'][:11]:<12}{days:>5}"
+              f"{('-' if r['dirty'] is None else r['dirty']):>7}"
+              f"{('-' if r['commits_30d'] is None else r['commits_30d']):>5}{ev:>7}")
+        nxt = r.get("Siradaki", "")
+        blk = r.get("Engel", "")
+        if nxt:
+            print(f"{'':<18}-> {nxt[:80]}")
+        if blk:
+            print(f"{'':<18}!! ENGEL: {blk[:80]}")
+    missing = [r["name"] for r in rows if r["exists"] and not r.get("Siradaki")]
+    if missing:
+        print(f"\nSTATUS.md eksik/bos: {', '.join(missing)}")
+        print("Sablon: brain status --template > <proje>/STATUS.md")
+    return 0
+
+
+DASH_CSS = """
+*{box-sizing:border-box}body{margin:0;padding:24px;background:#12131a;color:#e6e6ea;
+font:14px/1.5 ui-sans-serif,system-ui,Segoe UI,sans-serif}
+h1{font-size:20px;margin:0 0 4px}.sub{color:#8b8f9e;font-size:13px;margin-bottom:20px}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.card{background:#1b1d26;border:1px solid #2a2d3a;border-radius:10px;padding:14px}
+.card.warn{border-color:#7a5c1f}.card.err{border-color:#8a2f2f}
+.name{font-weight:600;font-size:15px}.type{color:#8b8f9e;font-size:12px;margin-left:6px}
+.m{display:flex;gap:14px;margin:10px 0;flex-wrap:wrap}
+.m div{font-size:12px;color:#8b8f9e}.m b{display:block;color:#e6e6ea;font-size:16px;font-weight:600}
+.next{margin-top:8px;padding:8px;background:#22252f;border-radius:6px;font-size:13px}
+.blk{margin-top:6px;padding:8px;background:#3a2020;border-radius:6px;font-size:13px}
+.none{color:#6b6f7e;font-style:italic;font-size:12px;margin-top:8px}
+h2{font-size:17px;margin:28px 0 6px}h3{font-size:13px;color:#8b8f9e;margin:18px 0 6px;font-weight:500}
+.chips{margin-bottom:8px}.chip{display:inline-block;background:#22252f;border:1px solid #2a2d3a;
+border-radius:20px;padding:2px 10px;font-size:12px;margin:0 6px 6px 0;color:#b8bcc8}
+ul.log{list-style:none;margin:8px 0 0;padding:0}
+ul.log li{font-size:12.5px;padding:3px 0;border-top:1px solid #22252f;color:#c8ccd6}
+ul.log li .k{display:inline-block;min-width:66px;color:#6f8f7a;font-size:11px}
+.bar{height:5px;background:#2a2d3a;border-radius:3px;overflow:hidden;margin-top:10px}
+.bar i{display:block;height:100%;background:#4a8f5c}
+footer{margin-top:24px;color:#6b6f7e;font-size:12px}
+"""
+
+
+def render_activity(commits: list[dict], days: int) -> str:
+    if not commits:
+        return (f'<h2>Son {days} gun</h2>'
+                f'<div class="none">Commit bulunamadi.</div>')
+    e = html.escape
+    by_project: dict[str, list] = {}
+    by_kind: dict[str, int] = {}
+    for c in commits:
+        by_project.setdefault(c["project"], []).append(c)
+        by_kind[c["kind"]] = by_kind.get(c["kind"], 0) + 1
+    chips = " ".join(f'<span class="chip">{e(k)} {v}</span>' for k, v in
+                     sorted(by_kind.items(), key=lambda x: -x[1]))
+    blocks = []
+    for proj, items in sorted(by_project.items(), key=lambda x: -len(x[1])):
+        lis = "".join(f'<li><span class="k">{e(c["kind"])}</span>{e(c["subject"][:90])}</li>'
+                      for c in items[:8])
+        more = (f'<li class="none">...{len(items)-8} commit daha</li>'
+                if len(items) > 8 else "")
+        blocks.append(f'<div class="card"><div class="name">{e(proj)}'
+                      f'<span class="type">{len(items)} commit</span></div>'
+                      f'<ul class="log">{lis}{more}</ul></div>')
+    return (f'<h2>Son {days} gun &middot; {len(by_project)} proje &middot; '
+            f'{len(commits)} commit</h2><div class="chips">{chips}</div>'
+            f'<h3>Haftalik commit</h3>{svg_weekly(commits)}'
+            f'<div class="grid">{"".join(blocks)}</div>'
+            f'<div class="none">Commit sayisi is hacminin zayif olcusudur; '
+            f'asil bilgi basliklardir.</div>')
+
+
+def render_dashboard(rows: list[dict], generated: str,
+                     commits: list[dict] | None = None, days: int = 7) -> str:
+    e = html.escape
+    cards = []
+    for r in rows:
+        if not r["exists"]:
+            cards.append(f'<div class="card err"><div class="name">{e(r["name"])}</div>'
+                         f'<div class="none">Dizin bulunamadi: {e(r["path"])}</div></div>')
+            continue
+        cls = "card"
+        if r.get("Engel"):
+            cls = "card err"
+        elif r["days"] is not None and r["days"] > 30:
+            cls = "card warn"
+        ev = r["eval"]
+        ev_txt = f'%{ev["pass_rate"]*100:.0f}' if ev else "-"
+        bar = (f'<div class="bar"><i style="width:{ev["pass_rate"]*100:.0f}%"></i></div>'
+               if ev else "")
+        parts = [f'<div class="{cls}">',
+                 f'<div><span class="name">{e(r["name"])}</span>'
+                 f'<span class="type">{e(r["type"])}</span></div>',
+                 '<div class="m">',
+                 f'<div>son commit<b>{r["days"] if r["days"] is not None else "-"}g</b></div>',
+                 f'<div>30 gun<b>{r["commits_30d"] if r["commits_30d"] is not None else "-"}</b></div>',
+                 f'<div>kirli<b>{r["dirty"] if r["dirty"] is not None else "-"}</b></div>',
+                 f'<div>eval<b>{ev_txt}</b></div>',
+                 f'<div>kosu<b>{r["runs"]}</b></div>',
+                 '</div>', bar]
+        if r.get("Durum"):
+            parts.append(f'<div class="next">{e(r["Durum"])}</div>')
+        if r.get("Siradaki"):
+            parts.append(f'<div class="next">-> {e(r["Siradaki"])}</div>')
+        if r.get("Engel"):
+            parts.append(f'<div class="blk">ENGEL: {e(r["Engel"])}</div>')
+        if not any(r.get(k) for k in STATUS_KEYS):
+            parts.append('<div class="none">STATUS.md yok - durum bilgisi elle girilir</div>')
+        parts.append("</div>")
+        cards.append("".join(parts))
+
+    return (f'<!doctype html><html lang="tr"><head><meta charset="utf-8">'
+            f'<meta name="viewport" content="width=device-width,initial-scale=1">'
+            f'<title>ONOZ Brain</title><style>{DASH_CSS}</style></head><body>'
+            f'<h1>Proje panosu</h1>'
+            f'<div class="sub">{len(rows)} proje &middot; uretim: {e(generated)} '
+            f'&middot; salt okunur, veri girisi STATUS.md ve git uzerinden</div>'
+            f'<div class="grid">{"".join(cards)}</div>'
+            f'{render_activity(commits or [], days)}'
+            f'<footer>Sari kart: 30+ gun commit yok. Kirmizi: engel var veya dizin kayip. '
+            f'Bunlar etkinlik sinyalidir, yargi degil.</footer></body></html>')
+
+
+def cmd_dashboard(brain: Brain, args) -> int:
+    brain.require()
+    rows = collect_status(brain)
+    commits = collect_activity(brain, args.days)
+    out = Path(args.out) if args.out else brain.root / "memory" / "dashboard.html"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(render_dashboard(rows, now_iso(), commits, args.days), encoding="utf-8")
+    print(f"Pano yazildi: {out}")
+    if args.open:
+        import webbrowser
+        webbrowser.open(out.resolve().as_uri())
+    return 0
+
+
+
+# --------------------------------------------------------------------------
+# Etkinlik: commit mesajlarindan anlamli ozet
+# --------------------------------------------------------------------------
+
+# Turkce + Ingilizce anahtar kelimeler. Conventional commit varsa o oncelikli.
+# Sira onemli: ozgul kategoriler once. Eslesme KELIME SINIRIYLA yapilir --
+# alt-dizgi eslesmesi "yeniden" icindeki "yeni"yi yakalayip yanlis siniflar.
+KIND_KEYWORDS = [
+    ("asset",    ("asset", "sprite", "texture", "atlas", "mesh", "model", "ses", "muzik",
+                  "müzik", "gorsel", "görsel", "ikon", "shader", "animasyon")),
+    ("test",     ("test", "testi", "testler", "eval", "spec", "coverage")),
+    ("dokuman",  ("docs", "doc", "readme", "belge", "dokuman", "doküman", "yorum", "changelog")),
+    ("duzeltme", ("fix", "bug", "hata", "duzelt", "düzelt", "duzeltildi", "düzeltildi",
+                  "onar", "onarildi", "onarıldı", "patch", "hotfix")),
+    ("refactor", ("refactor", "cleanup", "temizle", "temizlik", "sadelestir", "sadeleştir",
+                  "yeniden", "tasindi", "taşındı", "bolundu", "bölündü")),
+    ("bakim",    ("chore", "bump", "deps", "bagimlilik", "bağımlılık", "config", "ci",
+                  "build", "versiyon", "surum", "sürüm", "pipeline")),
+    ("ozellik",  ("feat", "add", "ekle", "eklendi", "yeni", "implement", "olustur",
+                  "oluştur", "uygulandi", "uygulandı")),
+]
+CONV_RE = re.compile(r"^(feat|fix|refactor|test|docs|chore|perf|style|build|ci)\b", re.I)
+CONV_MAP = {"feat": "ozellik", "fix": "duzeltme", "refactor": "refactor", "test": "test",
+            "docs": "dokuman", "chore": "bakim", "perf": "refactor", "style": "refactor",
+            "build": "bakim", "ci": "bakim"}
+
+
+def classify(subject: str) -> str:
+    m = CONV_RE.match(subject.strip())
+    if m:
+        return CONV_MAP.get(m.group(1).lower(), "diger")
+    tokens = set(re.findall(r"\w+", subject.lower(), re.UNICODE))
+    for kind, words in KIND_KEYWORDS:
+        if tokens & set(words):
+            return kind
+    return "diger"
+
+
+def collect_activity(brain: Brain, days: int) -> list[dict]:
+    """Bagli tum projelerin commit gecmisini toplar. Merge commit'leri disarida."""
+    commits = []
+    for name, meta in sorted(brain.projects().items()):
+        path = Path(meta["path"])
+        if not path.exists():
+            continue
+        raw = git(path, "log", "--no-merges", f"--since={days}.days",
+                  "--format=%h\x1f%cI\x1f%s")
+        if not raw:
+            continue
+        for line in raw.splitlines():
+            parts = line.split("\x1f")
+            if len(parts) != 3:
+                continue
+            sha, iso, subject = parts
+            commits.append({"project": name, "type": meta.get("type", "?"), "sha": sha,
+                            "iso": iso, "subject": subject.strip(),
+                            "kind": classify(subject)})
+    return commits
+
+
+def week_key(iso: str) -> str:
+    try:
+        d = datetime.fromisoformat(iso)
+    except ValueError:
+        return "?"
+    y, w, _ = d.isocalendar()
+    return f"{y}-H{w:02d}"
+
+
+def cmd_activity(brain: Brain, args) -> int:
+    brain.require()
+    commits = collect_activity(brain, args.days)
+    if not commits:
+        print(f"Son {args.days} gunde commit yok (veya projeler git reposu degil).")
+        return 0
+
+    by_project: dict[str, list] = {}
+    by_kind: dict[str, int] = {}
+    for c in commits:
+        by_project.setdefault(c["project"], []).append(c)
+        by_kind[c["kind"]] = by_kind.get(c["kind"], 0) + 1
+
+    if args.md:
+        print(f"## Son {args.days} gun — {len(by_project)} proje, {len(commits)} commit\n")
+        for proj, items in sorted(by_project.items(), key=lambda x: -len(x[1])):
+            print(f"### {proj} ({len(items)})")
+            for c in items[:args.limit]:
+                print(f"- `{c['kind']}` {c['subject']}")
+            if len(items) > args.limit:
+                print(f"- _...{len(items)-args.limit} commit daha_")
+            print()
+        print("**Basliklar:** " + ", ".join(f"{k} {v}" for k, v in
+              sorted(by_kind.items(), key=lambda x: -x[1])))
+        return 0
+
+    print(f"SON {args.days} GUN — {len(by_project)} proje, {len(commits)} commit\n")
+    for proj, items in sorted(by_project.items(), key=lambda x: -len(x[1])):
+        print(f"{proj} ({items[0]['type']}) — {len(items)} commit")
+        for c in items[:args.limit]:
+            print(f"   {c['kind']:<9} {c['subject'][:66]}")
+        if len(items) > args.limit:
+            print(f"   {'':<9} ...{len(items)-args.limit} commit daha")
+        print()
+    print("BASLIKLAR: " + "  ".join(f"{k}={v}" for k, v in
+          sorted(by_kind.items(), key=lambda x: -x[1])))
+    print("\nNot: commit sayisi is hacminin zayif olcusudur. Tek commit bir haftalik "
+          "is olabilir; asil bilgi yukaridaki basliklardir.")
+    return 0
+
+
+def svg_weekly(commits: list[dict], weeks: int = 8) -> str:
+    """Bagimliliksiz SVG sutun grafik: son N haftanin commit sayisi."""
+    buckets: dict[str, int] = {}
+    for c in commits:
+        buckets[week_key(c["iso"])] = buckets.get(week_key(c["iso"]), 0) + 1
+    keys = sorted(buckets)[-weeks:]
+    if not keys:
+        return '<div class="none">Grafik icin yeterli veri yok</div>'
+    vals = [buckets[k] for k in keys]
+    top = max(vals) or 1
+    w, h, pad = 100.0 / len(keys), 90, 0.18
+    bars = []
+    for i, (k, v) in enumerate(zip(keys, vals)):
+        bh = (v / top) * (h - 22)
+        x, bw = i * w + w * pad, w * (1 - 2 * pad)
+        bars.append(
+            f'<rect x="{x:.2f}%" y="{h-14-bh:.1f}" width="{bw:.2f}%" height="{bh:.1f}" '
+            f'rx="2" fill="#4a8f5c"/>'
+            f'<text x="{x+bw/2:.2f}%" y="{h-16-bh:.1f}" fill="#8b8f9e" font-size="9" '
+            f'text-anchor="middle">{v}</text>'
+            f'<text x="{x+bw/2:.2f}%" y="{h-3}" fill="#6b6f7e" font-size="8" '
+            f'text-anchor="middle">{html.escape(k.split("-")[1])}</text>')
+    return f'<svg viewBox="0 0 100 {h}" preserveAspectRatio="none" style="width:100%;height:{h}px">{"".join(bars)}</svg>'
+
+
 # --------------------------------------------------------------------------
 # CLI
 # --------------------------------------------------------------------------
@@ -665,6 +1039,22 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--apply", action="store_true", help="degisiklikleri yaz")
     sp.add_argument("--verbose", action="store_true")
     sp.set_defaults(fn=cmd_promote)
+
+    sp = sub.add_parser("status", help="Tum projelerin tek ekran ozeti")
+    sp.add_argument("--template", action="store_true", help="STATUS.md sablonunu bas")
+    sp.set_defaults(fn=cmd_status)
+
+    sp = sub.add_parser("activity", help="Commit mesajlarindan donem ozeti")
+    sp.add_argument("--days", type=int, default=7)
+    sp.add_argument("--limit", type=int, default=8, help="proje basina gosterilecek commit")
+    sp.add_argument("--md", action="store_true", help="markdown cikti (rapora yapistirmalik)")
+    sp.set_defaults(fn=cmd_activity)
+
+    sp = sub.add_parser("dashboard", help="Tarayici panosu uret (tek dosya HTML)")
+    sp.add_argument("--out", help="cikti yolu")
+    sp.add_argument("--open", action="store_true", help="tarayicida ac")
+    sp.add_argument("--days", type=int, default=7, help="etkinlik penceresi")
+    sp.set_defaults(fn=cmd_dashboard)
 
     sp = sub.add_parser("eval", help="Proje eval setini calistir")
     sp.add_argument("project")

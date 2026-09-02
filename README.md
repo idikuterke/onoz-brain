@@ -144,3 +144,64 @@ onoz-brain/
 ```
 
 Koşu kayıtları JSONL ve commit edilir: sicilin kendisi repoda, geçmişi git'te görünür. Otonomi grafiğini bu dosyalardan üretirsin.
+
+---
+
+## Proje panosu
+
+`brain` iki tür veri birleştirir:
+
+**Otomatik (senden hiçbir şey istemez)** — git'ten türetilir: son commit kaç gün önce,
+aktif dal, kirli dosya sayısı, son 30 gün commit sayısı. Ayrıca eval pass rate ve koşu sayısı.
+
+**Elle (proje başına 3 satır)** — `STATUS.md` projenin kendi reposunda durur, git'te
+versiyonlanır, projeyle birlikte taşınır:
+
+```
+Durum: <proje su an nerede>
+Siradaki: <bir sonraki somut adim>
+Engel: <varsa; yoksa bos>
+```
+
+```bash
+brain status --template > <proje>/STATUS.md   # sablon
+brain status                                  # terminal ozeti
+brain dashboard --open                        # tarayici panosu
+```
+
+Pano tek dosya HTML: sunucu yok, npm yok, CDN yok, internet yok. `memory/dashboard.html`
+olarak üretilir, çift tıklayınca açılır.
+
+### Panonun kapsamı — bilerek dar
+
+Pano **salt okunur**. İçinde veri girişi, görev ekleme, sürükle-bırak yok.
+Proje yönetim aracı değil; olmaya çalışırsa kullandığın araçlarla rekabete girer ve
+ikisi birden güvenilmez hale gelir.
+
+Sarı kart = 30+ gün commit yok. Kırmızı = engel var veya dizin kayıp.
+Bunlar **etkinlik sinyalidir, yargı değil** — bir proje bilerek beklemede olabilir,
+ya da ilerlemesi git'e yansımayan bir aşamada olabilir. Pano ne gördüğünü söyler,
+ne anlama geldiğini değil.
+
+## Dönem özeti — commit'lerden
+
+Commit mesajların zaten veri. `activity` bunları tüm projelerden toplar, başlığa göre
+sınıflar ve okunabilir özet çıkarır. **Elle giriş yok.**
+
+```bash
+brain activity                      # son 7 gun
+brain activity --days 30            # son 30 gun
+brain activity --days 7 --md        # markdown, rapora yapistirmalik
+brain dashboard --days 30 --open    # pano + haftalik grafik
+```
+
+Sınıflandırma önce conventional commit (`feat:`, `fix:`) arar; yoksa Türkçe/İngilizce
+anahtar kelimeye bakar (ekle/add → özellik, düzelt/fix → düzeltme, sprite/texture →
+asset...). Eşleşmezse `diger` olur — `diger` oranı yüksekse commit mesajların
+sınıflanamıyor demektir, mesaj disiplinini sıkılaştır.
+
+### Commit sayısına fazla anlam yükleme
+
+Tek commit bir haftalık iş olabilir; on commit bir yazım hatası düzeltmesi.
+Grafik **etkinlik ritmini** gösterir, iş hacmini değil. Asıl bilgi başlık listesidir —
+"bu hafta 3 projede şu işler yapıldı" cümlesini oradan kurarsın, sayıdan değil.
