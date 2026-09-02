@@ -1,0 +1,1 @@
+{"id": "GVER-01", "kind": "regression", "title": "38 sinifli kilitli etiket seti degismemis", "verify": "python -c \"import hashlib,sys,pathlib; h=hashlib.sha256(pathlib.Path('gokturk_labels_v1_locked.json').read_bytes()).hexdigest(); sys.exit(0 if h=='2c6c77b844e0cf7255d70df1ae35df4b866c9a5475c06a35e16910be673985a5' else 1)\"", "timeout": 30, "needs_adjust": false}
