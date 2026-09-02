@@ -48,10 +48,9 @@ sonundaki gercek-durum tablosunu okur.
 
 - Proje yolu C:\Users\pc\Tunga (project.godot name="KutunArinisi", Godot
   4.7.1 - C:\Godot\Godot_v4.7.1-stable_win64_console.exe, PATH'te degil).
-- **stash@{0}: kullanicinin 18 gunluk commit'lenmemis calismasi** ("18 gunluk
-  calisma - eval oncesi"). Geri verme: `git stash pop`. Kullanici
-  gelistirmeye devam etmeden once stash'i pop'lamali/commit'lemeli; eval
-  kosumlari sirasinda stash durmali.
+- **18 gunluk calisma guvenceye alindi**: `stash@{0}` basariyla `wip/agustos-2026`
+  dalina cevrildi ve commit'lendi (`bcf37fb`). `master` dali tertemiz. Eval
+  kosulari master'da calisir, calisma devam edeceginde `git checkout wip/agustos-2026`.
 - Ajan gorevleri test yazinca: iyi test **projeye commit edilir** ->
   regression KA-07 gecer (8 -> 9/10); ajan gorevi calismaya devam eder
   (setup dosyayi yine siler).
@@ -60,19 +59,18 @@ sonundaki gercek-durum tablosunu okur.
 
 - Git remote verilmeli -> `git push` (public olacak; eval kayitlari otonomi
   egrisinin kaniti).
-- C:\Users\pc\Desktop\gokyazi\.brain.json silinecek (eski konum kalintisi).
-- STATUS.md icerikleri (8 proje x 3 satir: nerede kaldim / siradaki adim /
-  engel) - yalniz kullanicinin bildigi veri; sablon:
-  `brain status --template > <proje>\STATUS.md`.
-- Opsiyonel: cuma ritueli icin `brain activity --days 7 --md` zamanlanmis gorev.
+- STATUS.md icerikleri (8 proje x 2 satir: Siradaki ve Engel). Ajan commit
+  gecmisinden "Durum" satirini taslak olarak 8 projeye yazdi; Siradaki ve
+  Engel satirlarini kullanici dolduracak.
+- Cuma ritueli: `brain activity --days 7 --md --exclude career-ops > memory/haftalik/2026-Wxx.md`
+  dosyaya yazilacak sekilde calistirilacak.
 
 ## Hizli komutlar
 
 ```
-brain status                      # proje tablosu
-brain activity --days 30          # commit siniflandirma
-brain dashboard --open            # pano
-brain eval kutun-arinisi --kind regression --record   # ~%100 beklenir
-brain eval kutun-arinisi --kind agent --record        # yukseltilecek sayi
-brain eval kutun-arinisi --kind agent --record --allow-dirty  # untracked kalinti varsa
+brain status                                            # proje tablosu (SAGLIK / OTONOMI ayri)
+brain activity --days 30 --exclude career-ops           # commit siniflandirma
+brain dashboard --days 30 --exclude career-ops --open   # pano
+brain eval kutun-arinisi --kind regression --record     # %80 (8/10)
+brain eval kutun-arinisi --kind agent --record          # %0 (0/2, yukseltilecek sayi)
 ```
