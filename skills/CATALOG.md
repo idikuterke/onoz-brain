@@ -86,27 +86,19 @@ P1'e ancak P0'lar 10+ koşu biriktirdikten sonra geç. Aynı anda 25 beceri kurm
 
 ---
 
-## Kurulum sonrasi gercek durum (2026-09-02, AutoCoder)
+## Kurulum sonrasi gercek durum (2026-09-02)
 
-`SETUP_BRIEF.md` kurulumu tamamlandi; asagidaki tablo katalog ile diskin gercegini
-kaydeder. Katalog bilgisi ile gercek catisan yerlerde GERCEK esas alindi.
+`SETUP_BRIEF.md` kurulumu tamamlandi; 10 proje `brain link` ile sisteme baglandi:
 
-| Proje (katalog) | Gercek dizin | Gercek tip | Durum |
-|---|---|---|---|
-| Kut'un Arinisi (godot) | `C:\Users\pc\Tunga` (project.godot name="KutunArinisi", Godot 4.7) | godot | bagli |
-| OnozIdle (katalog: godot) | `C:\Users\pc\Unity Projeleri\OnozIdle` | **unity** (katalog YANLIS) | bagli, tip unity |
-| Gokyazi / YAZGI (flutter) | `C:\Users\pc\YAZGI` (pubspec name: sade) | flutter | bagli |
-| Gokyuzu Gunlugu (flutter) | `C:\Users\pc\tengri_fast_app` (pubspec name: gokyuzu_gunlugu) | flutter | bagli |
-| ONOZ Labs sitesi (web) | `C:\Users\pc\onozlabs` (Next.js 16) | web | bagli |
-| Gokturk Studio (python-tool) | `C:\Users\pc\gokturk_studio` | python-tool | bagli |
-| ROTA (flutter) | `C:\Users\pc\Girisimlerim\Rota` | flutter | bagli |
-| career-ops (katalog: python-tool) | `C:\Users\pc\Documents\antigravity\intelligent-newton` (package.json name: career-ops) | **web** (Node.js; katalog YANLIS) | bagli |
-| Gokturkce font uretimi | — | — | baglanmadi: ayri kaynak dizin yok (font isleri gokturk_studio icinde) |
-| Gokturkce sanal klavye | — | — | baglanmadi: dizin bulunamadi |
-| Asimetrik dil oyunu | — | — | baglanmadi: dizin bulunamadi |
-
-Katalogda olmayan ama kullanicinin proje kaydinda yer alan diger projeler
-(istenirse `brain link` ile eklenebilir): `arin_agent_app`, `gokturk_public`,
-`gokyazipanel`, `iBOS`, `volfiednew`, `E:\Icerik Uretim Hatti`,
-`E:\gokturk_verfy`, `E:\Gokturk_vision`, `Girisimlerim\rehber`, `OmniRoute`,
-`OpenMontage`, `open-design`, `Kurultay\arin_app` (quit_tracker).
+| Proje | Ekosistem Tipi | Durum |
+|---|---|---|
+| Kut'un Arinisi | godot (Godot 4.7) | bagli |
+| OnozIdle | unity (katalog duzeltildi) | bagli |
+| Gokyazi / YAZGI | flutter | bagli |
+| Gokyuzu Gunlugu | flutter | bagli |
+| ONOZ Labs sitesi | web (Next.js 16) | bagli |
+| Gokturk Studio | python-tool (CV/Font) | bagli |
+| Gokturk Vision | python-tool (SDXL/ControlNet) | bagli |
+| Gokturk Verify | python-tool (VLM OCR/Dataset) | bagli |
+| ROTA | flutter | bagli |
+| career-ops | web (Node.js) | bagli |

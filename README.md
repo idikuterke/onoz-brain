@@ -1,8 +1,19 @@
 # onoz-brain
 
-Tek merkezde duran beceri kütüphanesi. 10+ projeye servis eder, her kullanımın sicilini tutar, becerileri **kanıta dayalı** olarak terfi ettirir.
+10 projeye ortak beceri kütüphanesi servis eden, her kullanımın sicilini tutan
+ve becerileri kanıta dayalı olarak terfi ettiren bir çalışma sistemi.
 
-Bağımlılık yok — Python 3.9+ standart kütüphane. Model bağımsız: hangi ajanı kullandığın sistemin umurunda değil.
+Ölçtüğü şey model yeteneği değil, **insan üstünden kalkan yük**: otonomi oranı,
+görev başına inceleme süresi, sessiz hata sayısı.
+
+| Ölçek | Bugün |
+|---|---|
+| Bağlı proje | 10 |
+| Beceri | 9 |
+| Proje sağlığı (Kut'un Arınışı) | 8/10 |
+| Soğuk otonomi ölçümü | henüz yok |
+
+Bağımlılık: yok. Python 3.9+ standart kütüphane. Model bağımsız: hangi ajanı kullandığın sistemin umurunda değil.
 
 ---
 
