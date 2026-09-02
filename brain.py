@@ -580,14 +580,10 @@ def assert_tree_safe(project_dir: Path, tasks: list[dict], allow_dirty: bool) ->
     )
 
 
-def cmd_eval(brain: Brain, args) -> int:
-    """Sabit gorev setini calistirir. Sistemin butununun olcum aletidir."""
-    brain.require()
-    proj = brain.project(args.project)
-    path = brain.root / "evals" / args.project / "tasks.jsonl"
+def load_tasks(brain: Brain, project: str) -> list[dict]:
+    path = brain.root / "evals" / project / "tasks.jsonl"
     if not path.exists():
         raise BrainError(f"Eval seti yok: {path}")
-
     tasks = []
     for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         line = line.strip()
@@ -597,7 +593,6 @@ def cmd_eval(brain: Brain, args) -> int:
             tasks.append(json.loads(line))
         except json.JSONDecodeError as exc:
             raise BrainError(f"Bozuk eval gorevi {path.name}:{lineno} ({exc})") from exc
-
     for t in tasks:
         try:
             t["timeout"] = int(t.get("timeout", 120))
@@ -605,6 +600,133 @@ def cmd_eval(brain: Brain, args) -> int:
             raise BrainError(f"Gorev {t.get('id','?')}: timeout sayisal olmali, "
                              f"bulunan: {t.get('timeout')!r}")
         t.setdefault("kind", "regression")
+    return tasks
+
+
+def run_shell(cmd: str, brain: Brain, cwd: Path, timeout: int):
+    env = dict(os.environ, BRAIN_HOME=str(brain.root))
+    return subprocess.run(expand_tokens(cmd, brain.root, cwd), shell=True, cwd=str(cwd),
+                          env=env, capture_output=True, text=True,
+                          encoding="utf-8", errors="replace", timeout=timeout)
+
+
+def trial_path(brain: Brain, project: str, task_id: str) -> Path:
+    return brain.root / "memory" / "trials" / f"{project}__{task_id}.json"
+
+
+def pending_trials(brain: Brain) -> list[Path]:
+    return sorted((brain.root / "memory" / "trials").glob("*.json"))
+
+
+def record_eval(brain: Brain, project: str, results: list[dict]) -> Path:
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    out = brain.root / "memory" / "evals" / f"{stamp}-{project}.json"
+    passed = sum(1 for r in results if r["ok"])
+    write_json(out, {"ts": now_iso(), "project": project, "passed": passed,
+                     "total": len(results),
+                     "pass_rate": round(passed / (len(results) or 1), 4),
+                     "results": results})
+    return out
+
+
+def cmd_trial(brain: Brain, args) -> int:
+    """Iki fazli ajan olcumu: setup -> (baska oturum calisir) -> verify.
+
+    Tek komutta setup+verify kosmak ajani aradan cikarir; o olcum daima 0 doner.
+    """
+    brain.require()
+    if args.action == "list":
+        pend = pending_trials(brain)
+        if not pend:
+            print("Bekleyen deneme yok.")
+            return 0
+        print("BEKLEYEN DENEMELER (agac bozuk durumda, unutma):")
+        for f in pend:
+            d = read_json(f, default={})
+            print(f"  {d.get('project','?')} / {d.get('task','?')}  "
+                  f"basladi: {d.get('started','?')}")
+        return 0
+
+    proj = brain.project(args.project)
+    cwd = Path(proj["path"])
+    tasks = [t for t in load_tasks(brain, args.project) if t.get("id") == args.task]
+    if not tasks:
+        raise BrainError(f"Gorev bulunamadi: {args.task}")
+    task = tasks[0]
+    if task["kind"] != "agent":
+        raise BrainError(f"{args.task} bir ajan gorevi degil (kind={task['kind']}). "
+                         f"Regresyon gorevleri icin: brain eval")
+    pend = trial_path(brain, args.project, args.task)
+
+    if args.action == "start":
+        if pend.exists():
+            raise BrainError(f"Bu deneme zaten acik: {pend}\n"
+                             f"Bitir: brain trial finish ... | Iptal: brain trial abort ...")
+        assert_tree_safe(cwd, [task], args.allow_dirty)
+        if task.get("setup"):
+            sp = run_shell(task["setup"], brain, cwd, task["timeout"])
+            if sp.returncode != 0:
+                raise BrainError(f"setup basarisiz (exit={sp.returncode}):\n{sp.stderr[:500]}")
+        write_json(pend, {"project": args.project, "task": args.task,
+                          "started": now_iso(), "title": task.get("title", "")})
+        print(f"DENEME ACILDI: {args.project} / {args.task}")
+        print(f"Agac simdi bozuk durumda. Bitirmeden birakma.\n")
+        print("--- SIFIR BAGLAMLI OTURUMA VERILECEK ---")
+        print(f"1) python brain.py context {args.project}")
+        print(f"2) Gorev:\n{task.get('prompt', '(prompt alani bos)')}")
+        print("\n--- BITTIGINDE ---")
+        print(f"python brain.py trial finish {args.project} {args.task} --record")
+        return 0
+
+    if not pend.exists():
+        raise BrainError(f"Acik deneme yok: {args.project} / {args.task}\n"
+                         f"Once: brain trial start {args.project} {args.task}")
+
+    if args.action == "abort":
+        if task.get("teardown"):
+            try:
+                run_shell(task["teardown"], brain, cwd, task["timeout"])
+            except (OSError, subprocess.TimeoutExpired) as exc:
+                print(f"[uyari] teardown basarisiz: {exc}", file=sys.stderr)
+        pend.unlink()
+        print(f"Deneme iptal edildi, agac geri alindi: {args.task}")
+        return 0
+
+    # finish
+    try:
+        proc = run_shell(task["verify"], brain, cwd, task["timeout"])
+        ok, detail = proc.returncode == 0, f"exit={proc.returncode}"
+        tail = (proc.stdout or proc.stderr or "").strip().splitlines()[-6:]
+    except subprocess.TimeoutExpired:
+        ok, detail, tail = False, "TIMEOUT", []
+    except OSError as exc:
+        ok, detail, tail = False, str(exc), []
+    finally:
+        if task.get("teardown"):
+            try:
+                run_shell(task["teardown"], brain, cwd, task["timeout"])
+            except (OSError, subprocess.TimeoutExpired) as exc:
+                print(f"[uyari] teardown basarisiz: {exc}", file=sys.stderr)
+        pend.unlink(missing_ok=True)
+
+    print(f"[{'GECTI' if ok else 'KALDI'}] {args.task}  {task.get('title','')}"
+          + ("" if ok else f"  ({detail})"))
+    for line in tail:
+        print("   " + line[:100])
+    if args.record:
+        out = record_eval(brain, args.project, [{"id": args.task, "ok": ok,
+                                                 "detail": detail, "kind": "agent"}])
+        print(f"Kaydedildi: {out}")
+    else:
+        print("Kaydetmek icin: --record")
+    return 0 if ok else 1
+
+
+def cmd_eval(brain: Brain, args) -> int:
+    """Sabit gorev setini calistirir. Sistemin butununun olcum aletidir."""
+    brain.require()
+    proj = brain.project(args.project)
+    tasks = load_tasks(brain, args.project)
 
     if args.task:
         tasks = [t for t in tasks if t.get("id") == args.task]
@@ -619,8 +741,22 @@ def cmd_eval(brain: Brain, args) -> int:
     if not cwd.exists():
         raise BrainError(f"Proje dizini kayip: {cwd}")
 
+    agent_tasks = [t for t in tasks if t["kind"] == "agent"]
+    if agent_tasks and not args.dry_run and not args.selftest:
+        raise BrainError(
+            f"{len(agent_tasks)} ajan gorevi secildi. 'eval' setup ve verify'i tek komutta "
+            f"kosar; ajan aradan cikar ve sonuc DAIMA 0 doner - bu bir olcum degildir.\n\n"
+            f"Ajan olcumu iki fazlidir:\n"
+            f"  brain trial start {args.project} <GOREV>    # kurar, prompt'u basar\n"
+            f"  (sifir baglamli oturum calisir)\n"
+            f"  brain trial finish {args.project} <GOREV> --record\n\n"
+            f"Gorevin kendisinin saglam olup olmadigini test etmek icin: --selftest")
+
     if not args.dry_run:
         assert_tree_safe(cwd, tasks, args.allow_dirty)
+        if args.selftest and agent_tasks:
+            print("SELFTEST modu: gorev saglamligi olculuyor, ajan yetenegi DEGIL.")
+            print("Beklenen sonuc: setup sonrasi verify KALMALI.\n")
 
     env = dict(os.environ, BRAIN_HOME=str(brain.root))
     results = []
@@ -671,12 +807,10 @@ def cmd_eval(brain: Brain, args) -> int:
     print(f"{'TOPLAM':<16} {passed}/{len(results)} = %{rate*100:.1f}")
 
     if args.record:
-        stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-        out = brain.root / "memory" / "evals" / f"{stamp}-{args.project}.json"
-        write_json(out, {"ts": now_iso(), "project": args.project,
-                         "passed": passed, "total": len(results),
-                         "pass_rate": round(rate, 4), "results": results})
-        print(f"Kaydedildi: {out}")
+        if args.selftest:
+            print("SELFTEST sonucu kaydedilmez - otonomi sayisi degil.")
+        else:
+            print(f"Kaydedildi: {record_eval(brain, args.project, results)}")
     else:
         print("Kaydetmek icin: --record  (baseline'i mutlaka kaydet)")
     return 0 if passed == len(results) else 1
@@ -842,6 +976,14 @@ def cmd_status(brain: Brain, args) -> int:
             print(f"{'':<18}-> {nxt[:80]}")
         if blk:
             print(f"{'':<18}!! ENGEL: {blk[:80]}")
+    pend = pending_trials(brain)
+    if pend:
+        print(f"\n!! {len(pend)} ACIK DENEME - ilgili agac bozuk durumda:")
+        for f in pend:
+            d = read_json(f, default={})
+            print(f"   {d.get('project','?')} / {d.get('task','?')}  "
+                  f"-> brain trial finish|abort")
+
     missing = [r["name"] for r in rows if r["exists"] and not r.get("Siradaki")]
     if missing:
         print(f"\nSTATUS.md eksik/bos: {', '.join(missing)}")
@@ -1193,7 +1335,17 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--kind", choices=["all", "regression", "agent"], default="all")
     sp.add_argument("--allow-dirty", action="store_true",
                     help="kirli agacta mudahaleci gorev kosmaya izin ver (riskli)")
+    sp.add_argument("--selftest", action="store_true",
+                    help="ajan gorevinin saglamligini olc (setup sonrasi verify KALMALI)")
     sp.set_defaults(fn=cmd_eval)
+
+    sp = sub.add_parser("trial", help="Iki fazli ajan olcumu (start/finish/abort/list)")
+    sp.add_argument("action", choices=["start", "finish", "abort", "list"])
+    sp.add_argument("project", nargs="?")
+    sp.add_argument("task", nargs="?")
+    sp.add_argument("--record", action="store_true")
+    sp.add_argument("--allow-dirty", action="store_true")
+    sp.set_defaults(fn=cmd_trial)
 
     return p
 
