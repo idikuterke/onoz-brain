@@ -1,0 +1,15 @@
+{
+  "ts": "2026-09-02T11:42:29+00:00",
+  "project": "kutun-arinisi",
+  "passed": 1,
+  "total": 1,
+  "pass_rate": 1.0,
+  "results": [
+    {
+      "id": "KA-A07",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "agent"
+    }
+  ]
+}
