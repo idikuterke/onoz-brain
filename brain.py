@@ -513,6 +513,36 @@ def expand_tokens(cmd: str, brain_root: Path, project_dir: Path) -> str:
     return cmd
 
 
+
+def assert_tree_safe(project_dir: Path, tasks: list[dict], allow_dirty: bool) -> None:
+    """Yikici teardown korumasi.
+
+    setup/teardown iceren gorevler calisma agacini degistirir. Agac kirliyse
+    'git checkout -- .' tipi bir teardown commit'lenmemis calismayi siler.
+    Bu yuzden kirli agacta mudahaleci gorev kosmayi reddediyoruz.
+    """
+    invasive = [t for t in tasks if t.get("setup") or t.get("teardown")]
+    if not invasive or allow_dirty:
+        return
+    porcelain = git(project_dir, "status", "--porcelain")
+    if porcelain is None:
+        print("[uyari] git repo degil veya git yok - agac guvenligi dogrulanamadi.",
+              file=sys.stderr)
+        return
+    dirty = [l for l in porcelain.splitlines() if l.strip()]
+    if not dirty:
+        return
+    ornek = "\n  ".join(d[:70] for d in dirty[:8])
+    more = f"\n  ...{len(dirty)-8} dosya daha" if len(dirty) > 8 else ""
+    raise BrainError(
+        f"Calisma agaci kirli ({len(dirty)} dosya) ve {len(invasive)} gorev "
+        f"setup/teardown iceriyor.\n"
+        f"Teardown commit'lenmemis calismani silebilir. Once commit veya stash et.\n\n"
+        f"  {ornek}{more}\n\n"
+        f"Riski biliyorsan: --allow-dirty"
+    )
+
+
 def cmd_eval(brain: Brain, args) -> int:
     """Sabit gorev setini calistirir. Sistemin butununun olcum aletidir."""
     brain.require()
@@ -551,6 +581,9 @@ def cmd_eval(brain: Brain, args) -> int:
     cwd = Path(proj["path"])
     if not cwd.exists():
         raise BrainError(f"Proje dizini kayip: {cwd}")
+
+    if not args.dry_run:
+        assert_tree_safe(cwd, tasks, args.allow_dirty)
 
     env = dict(os.environ, BRAIN_HOME=str(brain.root))
     results = []
@@ -1062,6 +1095,8 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--dry-run", action="store_true")
     sp.add_argument("--record", action="store_true", help="sonucu memory/evals altina yaz")
     sp.add_argument("--kind", choices=["all", "regression", "agent"], default="all")
+    sp.add_argument("--allow-dirty", action="store_true",
+                    help="kirli agacta mudahaleci gorev kosmaya izin ver (riskli)")
     sp.set_defaults(fn=cmd_eval)
 
     return p
