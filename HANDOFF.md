@@ -55,6 +55,10 @@ sonundaki gercek-durum tablosunu okur.
 - **18 gunluk calisma guvenceye alindi**: `stash@{0}` basariyla `wip/agustos-2026`
   dalina cevrildi ve commit'lendi (`bcf37fb`). `master` dali tertemiz. Eval
   kosulari master'da calisir, calisma devam edeceginde `git checkout wip/agustos-2026`.
+- **CONVENTIONS.md olusturuldu ve commit'lendi (`2be68e1`)**: Dizin yapisi, test
+  kalibi (`res://tests/run_tests.tscn` ve otomatik test kesfi), EventBus ve
+  autoload mimarisi, test izolasyonu (`GameState.sifirla()`) kurallari belgelendi.
+  Ajan brifingi artik sifir-baglamli ajanlar icin tam ve ogrenmeye hazir.
 - Ajan gorevleri test yazinca: iyi test **projeye commit edilir** ->
   regression KA-07 gecer (8 -> 9/10); ajan gorevi calismaya devam eder
   (setup dosyayi yine siler).
