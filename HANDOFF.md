@@ -43,6 +43,10 @@ sonundaki gercek-durum tablosunu okur.
 6. Proje kaynak dosyalarina .brain.json disinda yazilmaz; istisna: ajan
    gorevlerinin kendisi (KA-A05/A07 test dosyalari) - teardown'lari kontrol
    altindadir.
+7. **Gorevi tasarlayan oturum o gorevi cozmez (olcum kirlenmesi)**: Sinavi yazan
+   sinava giremez. KA-A07 ve benzeri ajan gorevleri, sadece `brain context`
+   brifingi alan AYRI ve temiz bir oturumda cozdurulur. Tasarimci oturum yalnizca
+   olcum (setup / eval / teardown) tarafinda kalir.
 
 ## Tunga (kutun-arinisi) ozel durumu
 

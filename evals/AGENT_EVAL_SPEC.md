@@ -40,6 +40,13 @@ ayrı raporluyor.
 3. **Zaten geçen bir şeyi görev yapma.** Baseline'ı şişirir, headroom bırakmaz.
 4. **Eval seti dondurulur.** Kalibrasyondan sonra görev metni değişirse geçmiş
    ölçümler karşılaştırılamaz. Yeni görev eklenir, eski değiştirilmez.
+5. **Görevi tasarlayan oturum o görevi çözemez (Ölçüm kirlenmesi yasağı).**
+   Sınavı yazan sınava giremez. Eval'in ölçtüğü şey şudur: *"Sadece `brain context`
+   brifingini alan bağımsız bir ajan bu işi yapabiliyor mu?"* Görevi tasarlayan,
+   kancayı kalibre eden, test beklentisini ve verify mantığını bilen oturum aynı
+   görevi çözerse ölçüm kirlenir ve otonomi skoru yanıltıcı olur. Çözüm her zaman
+   ayrı, sıfır-bağlamlı bir oturumda denenir (yalnızca `brain context` + `prompt`);
+   mevcut oturum yalnızca ölçüm/doğrulama tarafında kalır.
 
 ## İlk 6 ajan görevi — Kut'un Arınışı
 
