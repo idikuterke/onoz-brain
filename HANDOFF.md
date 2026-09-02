@@ -76,11 +76,16 @@ sonundaki gercek-durum tablosunu okur.
 
 ## Acik kalemler (kullanici isi)
 
-- Git remote verilmeli -> `git push` (public olacak; eval kayitlari otonomi
-  egrisinin kaniti).
-- STATUS.md icerikleri (10 proje x 2 satir: Siradaki ve Engel). Ajan commit
-  gecmisinden "Durum" satirini taslak olarak 10 projeye yazdi; Siradaki ve
-  Engel satirlarini kullanici dolduracak.
+- **Git Remote Push**: `origin` eklendi (`https://github.com/idikuterke/onoz-brain.git`).
+  GitHub'da `onoz-brain` reposu acildiktan sonra tek komutla push edilecek:
+  `git push -u origin master`
+- **STATUS.md Triyaji**: Uykudaki projeler (rota, onoz-idle vb.) panoyu kirletmemek
+  icin bos birakilacak; son donemde aktif 5 projenin `Siradaki` satirlari girilecek:
+  `kutun-arinisi`, `gokturk-studio`, `onoz-web`, `gokturk-vision`, `gokturk-verify`.
+- **Ilk Soguk Olcum (KA-A05)**: `brain trial start kutun-arinisi KA-A05` ile baslatilip
+  bagimsiz bos oturumda cozdurulecek ve `--solver cold` ile kaydedilecek.
+- **Sicil Birikimi**: Gercek gelistirmeler sirasinda kosulan testler `brain log` ile
+  kaydedilerek 10 kosuluk bariyer asilacak.
 - Cuma ritueli: `brain activity --days 7 --md --exclude career-ops > memory/haftalik/2026-Wxx.md`
   dosyaya yazilacak sekilde calistirilacak.
 
