@@ -381,9 +381,23 @@ def cmd_context(brain: Brain, args) -> int:
     skills = [s for s in brain.skills()
               if not s.get("archived") and (not s["applies_to"] or ptags & set(s["applies_to"]))]
 
-    print(f"# Beceri brifingi: {args.project}")
+    print(f"# Proje brifingi: {args.project}")
     print(f"\nProje tipi: {proj['type']} | Etiketler: {', '.join(sorted(ptags))}")
     print(f"Dizin: {proj['path']}\n")
+
+    conv = Path(proj["path"]) / "CONVENTIONS.md"
+    if conv.exists():
+        try:
+            print("## Proje konvansiyonlari\n")
+            print(conv.read_text(encoding="utf-8", errors="replace").strip() + "\n")
+        except OSError as exc:
+            print(f"[uyari] CONVENTIONS.md okunamadi: {exc}", file=sys.stderr)
+    else:
+        print("## Proje konvansiyonlari\n")
+        print("_CONVENTIONS.md yok._ Sifir baglamli bir ajan bu projenin dizin yapisini, "
+              "test kalibini ve mimari konvansiyonlarini bilmiyor. "
+              "`brain conventions --template > CONVENTIONS.md` ile olustur.\n")
+
     print("## Yetki kurallari\n")
     for lvl in LEVELS:
         print(f"- **{lvl}** — {LEVEL_DESC[lvl]}")
@@ -400,15 +414,28 @@ def cmd_context(brain: Brain, args) -> int:
             print(f"### {s['id']}")
             print(f"- Ne zaman: {when_to_use(s['_dir'])}")
             print(f"- Dogrulama: `{s.get('verify', '(tanimsiz)')}`")
-            print(f"- Sicil: {st['total']} kosu, basari %{st['pass_rate']*100:.0f}, "
-                  f"sessiz hata {st['silent']}")
+            sicil = ("sicil yok (henuz kosulmadi)" if st["total"] == 0 else
+                     f"{st['total']} kosu, basari %{st['pass_rate']*100:.0f}, "
+                     f"sessiz hata {st['silent']}")
+            print(f"- Sicil: {sicil}")
             print(f"- Dosya: {s['_dir']}\n")
 
-    lessons = sorted(brain.lessons_dir.glob("*.md"))
-    if lessons:
+    # Ders kayitlari: kapsamsiz olanlar + bu projeye ait olanlar.
+    # Baska projeye kapsanmis ders brifinge girmez - gurultu yapar.
+    relevant = []
+    for l in sorted(brain.lessons_dir.glob("*.md")):
+        try:
+            body = l.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        m = re.match(r"<!--\s*project:\s*(.+?)\s*-->", body)
+        if m and m.group(1) != args.project:
+            continue
+        relevant.append(re.sub(r"<!--.*?-->\s*", "", body, count=1).strip())
+    if relevant:
         print("## Onceki hatalardan cikan kurallar\n")
-        for l in lessons[-15:]:
-            print(l.read_text(encoding="utf-8").strip() + "\n")
+        for body in relevant[-15:]:
+            print(body + "\n")
     return 0
 
 
@@ -444,9 +471,8 @@ def cmd_lesson(brain: Brain, args) -> int:
     brain.lessons_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     path = brain.lessons_dir / f"{stamp}-{slugify(args.skill)}.md"
-    path.write_text(
-        f"- **{args.skill}**: {args.rule}\n", encoding="utf-8"
-    )
+    header = f"<!-- project: {args.project} -->\n" if args.project else ""
+    path.write_text(header + f"- **{args.skill}**: {args.rule}\n", encoding="utf-8")
     print(f"Kural kaydedildi: {path}")
     print("Bu kural bundan sonra her 'context' ciktisina eklenir.")
     return 0
@@ -502,8 +528,6 @@ def cmd_promote(brain: Brain, args) -> int:
     return 0
 
 
-
-
 def expand_tokens(cmd: str, brain_root: Path, project_dir: Path) -> str:
     """Platform bagimsiz jeton genisletme. cmd.exe $VAR bilmez, PowerShell %VAR% bilmez."""
     for token in ("$BRAIN_HOME", "${BRAIN_HOME}", "%BRAIN_HOME%"):
@@ -511,7 +535,6 @@ def expand_tokens(cmd: str, brain_root: Path, project_dir: Path) -> str:
     for token in ("$PROJECT_DIR", "${PROJECT_DIR}", "%PROJECT_DIR%"):
         cmd = cmd.replace(token, str(project_dir))
     return cmd
-
 
 
 def assert_tree_safe(project_dir: Path, tasks: list[dict], allow_dirty: bool) -> None:
@@ -659,7 +682,6 @@ def cmd_eval(brain: Brain, args) -> int:
     return 0 if passed == len(results) else 1
 
 
-
 # --------------------------------------------------------------------------
 # Durum toplama (otomatik turetilen + STATUS.md)
 # --------------------------------------------------------------------------
@@ -752,6 +774,42 @@ Engel: <varsa tek cumle, yoksa bos birak>
 <!-- Uc satir. Daha fazlasi yazma; bu dosya gorev takipcisi degil,
      panoda gorunecek ozet. Degistiginde guncelle, haftalik ritual yapma. -->
 """
+
+
+CONVENTIONS_TEMPLATE = """# Konvansiyonlar
+
+> Sifir baglamli bir ajanin bu projede calisabilmesi icin bilmesi gerekenler.
+> Gorev metinleri sabit kalir; ogrenme BU dosyada birikir.
+> Cozumu degil, kurali yaz. "X hatasi su satirda" degil, "hatalar su kalipla aranir".
+
+## Dizin yapisi
+
+- `scripts/` — ...
+- `scenes/` — ...
+- `tests/` — ...
+
+## Test kalibi
+
+- Suit girisi: `res://tests/run_tests.gd`, cikis kodu 0/1
+- Her test dosyasi: `extends Node`, `calistir() -> Array[Dictionary]`, `_kaydet` kalibi
+- Yeni test keşfi: <suit yeni dosyayi nasil buluyor>
+- Ornek dosyalar: `tests/test_etkilesim.gd`, `tests/test_boss.gd`
+
+## Mimari konvansiyonlar
+
+- Sinyal/olay: <EventBus var mi, adlandirma kurali>
+- Autoload'lar: <hangileri, ne ise yarar>
+- Isimlendirme: <Turkce mi Ingilizce mi, snake_case mi>
+
+## Bilinen tuzaklar
+
+- <ajanin duseceği, belgelenmemis seyler>
+"""
+
+
+def cmd_conventions(brain: Brain, args) -> int:
+    print(CONVENTIONS_TEMPLATE)
+    return 0
 
 
 def cmd_status(brain: Brain, args) -> int:
@@ -914,14 +972,10 @@ def cmd_dashboard(brain: Brain, args) -> int:
     return 0
 
 
-
 # --------------------------------------------------------------------------
 # Etkinlik: commit mesajlarindan anlamli ozet
 # --------------------------------------------------------------------------
 
-# Turkce + Ingilizce anahtar kelimeler. Conventional commit varsa o oncelikli.
-# Sira onemli: ozgul kategoriler once. Eslesme KELIME SINIRIYLA yapilir --
-# alt-dizgi eslesmesi "yeniden" icindeki "yeni"yi yakalayip yanlis siniflar.
 KIND_KEYWORDS = [
     ("asset",    ("asset", "sprite", "texture", "atlas", "mesh", "model", "ses", "muzik",
                   "müzik", "gorsel", "görsel", "ikon", "shader", "animasyon")),
@@ -1096,6 +1150,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("lesson", help="Basarisizliktan cikan kurali kaydet")
     sp.add_argument("--skill", required=True)
     sp.add_argument("--rule", required=True)
+    sp.add_argument("--project", help="dersi tek projeye kapsa (bos = tum projeler)")
     sp.set_defaults(fn=cmd_lesson)
 
     sp = sub.add_parser("stats", help="Otonomi orani ve inceleme yuku")
@@ -1118,6 +1173,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--exclude", action="append",
                     help="projeyi disarida birak (otomatik commit ureten projeler icin)")
     sp.set_defaults(fn=cmd_activity)
+
+    sp = sub.add_parser("conventions", help="CONVENTIONS.md sablonunu bas")
+    sp.add_argument("--template", action="store_true")
+    sp.set_defaults(fn=cmd_conventions)
 
     sp = sub.add_parser("dashboard", help="Tarayici panosu uret (tek dosya HTML)")
     sp.add_argument("--out", help="cikti yolu")
