@@ -532,11 +532,25 @@ def assert_tree_safe(project_dir: Path, tasks: list[dict], allow_dirty: bool) ->
     dirty = [l for l in porcelain.splitlines() if l.strip()]
     if not dirty:
         return
-    ornek = "\n  ".join(d[:70] for d in dirty[:8])
-    more = f"\n  ...{len(dirty)-8} dosya daha" if len(dirty) > 8 else ""
+    # 'git checkout -- .' izlenmeyen dosyaya dokunmaz; 'git clean' dokunur.
+    tracked = [d for d in dirty if not d.startswith("??")]
+    untracked = [d for d in dirty if d.startswith("??")]
+    scripts = " ".join((t.get("setup") or "") + " " + (t.get("teardown") or "")
+                       for t in invasive).lower()
+    destructive = "git clean" in scripts or "remove-item" in scripts or "rm -rf" in scripts
+
+    risky = tracked if not destructive else dirty
+    if not risky:
+        if untracked:
+            print(f"[bilgi] {len(untracked)} izlenmeyen dosya var; teardown'lar bunlara "
+                  f"dokunmuyor, kosuya devam.", file=sys.stderr)
+        return
+
+    ornek = "\n  ".join(d[:70] for d in risky[:8])
+    more = f"\n  ...{len(risky)-8} dosya daha" if len(risky) > 8 else ""
+    ne = "izlenen dosyada degisiklik" if not destructive else "silici teardown + kirli agac"
     raise BrainError(
-        f"Calisma agaci kirli ({len(dirty)} dosya) ve {len(invasive)} gorev "
-        f"setup/teardown iceriyor.\n"
+        f"{ne} ({len(risky)} dosya), {len(invasive)} gorev setup/teardown iceriyor.\n"
         f"Teardown commit'lenmemis calismani silebilir. Once commit veya stash et.\n\n"
         f"  {ornek}{more}\n\n"
         f"Riski biliyorsan: --allow-dirty"
@@ -681,14 +695,26 @@ def read_status_md(project_dir: Path) -> dict:
     return out
 
 
-def latest_eval(brain: Brain, project: str) -> dict | None:
-    files = sorted((brain.root / "memory" / "evals").glob(f"*-{project}.json"))
-    if not files:
-        return None
-    try:
-        return json.loads(files[-1].read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None
+def latest_evals(brain: Brain, project: str) -> dict:
+    """Her kind icin EN SON kaydi ayri dondurur.
+
+    Tek 'son dosya' mantigi yanlisti: ajan kosusu (0/2) regression kaydini (8/10)
+    gizliyordu. Dosyalar eskiden yeniye taranir, her kind kendi son degerini alir.
+    """
+    out: dict[str, dict] = {}
+    for f in sorted((brain.root / "memory" / "evals").glob(f"*-{project}.json")):
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        for kind in ("regression", "agent"):
+            grp = [r for r in data.get("results", [])
+                   if r.get("kind", "regression") == kind]
+            if grp:
+                ok = sum(1 for r in grp if r.get("ok"))
+                out[kind] = {"passed": ok, "total": len(grp),
+                             "rate": ok / len(grp), "ts": data.get("ts", "")}
+    return out
 
 
 def collect_status(brain: Brain) -> list[dict]:
@@ -698,7 +724,7 @@ def collect_status(brain: Brain) -> list[dict]:
         row = {"name": name, "type": meta.get("type", "?"), "path": str(path),
                "exists": path.exists(), "branch": "-", "last_commit": "-",
                "days": None, "dirty": None, "commits_30d": None,
-               "eval": None, "runs": len(brain.runs(project=name))}
+               "evals": {}, "runs": len(brain.runs(project=name))}
         if path.exists():
             row["branch"] = git(path, "rev-parse", "--abbrev-ref", "HEAD") or "-"
             iso = git(path, "log", "-1", "--format=%cI")
@@ -712,9 +738,7 @@ def collect_status(brain: Brain) -> list[dict]:
             if recent is not None:
                 row["commits_30d"] = len([l for l in recent.splitlines() if l.strip()])
             row.update(read_status_md(path))
-        ev = latest_eval(brain, name)
-        if ev:
-            row["eval"] = ev
+        row["evals"] = latest_evals(brain, name)
         rows.append(row)
     return rows
 
@@ -739,17 +763,21 @@ def cmd_status(brain: Brain, args) -> int:
     if not rows:
         print("Kayitli proje yok. 'brain link' ile ekle.")
         return 0
-    print(f"{'PROJE':<18}{'TIP':<13}{'DAL':<12}{'SON':>5}{'KIRLI':>7}{'30G':>5}{'EVAL':>7}")
-    print("-" * 70)
+    print(f"{'PROJE':<18}{'TIP':<13}{'DAL':<12}{'SON':>5}{'KIRLI':>7}{'30G':>5}"
+          f"{'SAGLIK':>8}{'OTONOMI':>9}")
+    print("-" * 82)
     for r in rows:
         if not r["exists"]:
             print(f"{r['name']:<18}{'DIZIN YOK':<13}{r['path'][:40]}")
             continue
-        ev = f"%{r['eval']['pass_rate']*100:.0f}" if r["eval"] else "-"
+        ev = r["evals"]
+        reg = f"%{ev['regression']['rate']*100:.0f}" if "regression" in ev else "-"
+        agt = f"%{ev['agent']['rate']*100:.0f}" if "agent" in ev else "-"
         days = f"{r['days']}g" if r["days"] is not None else "-"
         print(f"{r['name']:<18}{r['type']:<13}{r['branch'][:11]:<12}{days:>5}"
               f"{('-' if r['dirty'] is None else r['dirty']):>7}"
-              f"{('-' if r['commits_30d'] is None else r['commits_30d']):>5}{ev:>7}")
+              f"{('-' if r['commits_30d'] is None else r['commits_30d']):>5}"
+              f"{reg:>8}{agt:>9}")
         nxt = r.get("Siradaki", "")
         blk = r.get("Engel", "")
         if nxt:
@@ -831,10 +859,13 @@ def render_dashboard(rows: list[dict], generated: str,
             cls = "card err"
         elif r["days"] is not None and r["days"] > 30:
             cls = "card warn"
-        ev = r["eval"]
-        ev_txt = f'%{ev["pass_rate"]*100:.0f}' if ev else "-"
-        bar = (f'<div class="bar"><i style="width:{ev["pass_rate"]*100:.0f}%"></i></div>'
-               if ev else "")
+        ev = r["evals"]
+        reg = ev.get("regression")
+        agt = ev.get("agent")
+        reg_txt = f'%{reg["rate"]*100:.0f}' if reg else "-"
+        agt_txt = f'%{agt["rate"]*100:.0f}' if agt else "-"
+        bar = (f'<div class="bar"><i style="width:{reg["rate"]*100:.0f}%"></i></div>'
+               if reg else "")
         parts = [f'<div class="{cls}">',
                  f'<div><span class="name">{e(r["name"])}</span>'
                  f'<span class="type">{e(r["type"])}</span></div>',
@@ -842,7 +873,8 @@ def render_dashboard(rows: list[dict], generated: str,
                  f'<div>son commit<b>{r["days"] if r["days"] is not None else "-"}g</b></div>',
                  f'<div>30 gun<b>{r["commits_30d"] if r["commits_30d"] is not None else "-"}</b></div>',
                  f'<div>kirli<b>{r["dirty"] if r["dirty"] is not None else "-"}</b></div>',
-                 f'<div>eval<b>{ev_txt}</b></div>',
+                 f'<div>saglik<b>{reg_txt}</b></div>',
+                 f'<div>otonomi<b>{agt_txt}</b></div>',
                  f'<div>kosu<b>{r["runs"]}</b></div>',
                  '</div>', bar]
         if r.get("Durum"):
@@ -871,7 +903,7 @@ def render_dashboard(rows: list[dict], generated: str,
 def cmd_dashboard(brain: Brain, args) -> int:
     brain.require()
     rows = collect_status(brain)
-    commits = collect_activity(brain, args.days)
+    commits = collect_activity(brain, args.days, args.exclude)
     out = Path(args.out) if args.out else brain.root / "memory" / "dashboard.html"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(render_dashboard(rows, now_iso(), commits, args.days), encoding="utf-8")
@@ -921,10 +953,12 @@ def classify(subject: str) -> str:
     return "diger"
 
 
-def collect_activity(brain: Brain, days: int) -> list[dict]:
+def collect_activity(brain: Brain, days: int, exclude: list[str] | None = None) -> list[dict]:
     """Bagli tum projelerin commit gecmisini toplar. Merge commit'leri disarida."""
     commits = []
     for name, meta in sorted(brain.projects().items()):
+        if name in (exclude or ()):
+            continue
         path = Path(meta["path"])
         if not path.exists():
             continue
@@ -954,7 +988,7 @@ def week_key(iso: str) -> str:
 
 def cmd_activity(brain: Brain, args) -> int:
     brain.require()
-    commits = collect_activity(brain, args.days)
+    commits = collect_activity(brain, args.days, args.exclude)
     if not commits:
         print(f"Son {args.days} gunde commit yok (veya projeler git reposu degil).")
         return 0
@@ -1081,12 +1115,15 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--days", type=int, default=7)
     sp.add_argument("--limit", type=int, default=8, help="proje basina gosterilecek commit")
     sp.add_argument("--md", action="store_true", help="markdown cikti (rapora yapistirmalik)")
+    sp.add_argument("--exclude", action="append",
+                    help="projeyi disarida birak (otomatik commit ureten projeler icin)")
     sp.set_defaults(fn=cmd_activity)
 
     sp = sub.add_parser("dashboard", help="Tarayici panosu uret (tek dosya HTML)")
     sp.add_argument("--out", help="cikti yolu")
     sp.add_argument("--open", action="store_true", help="tarayicida ac")
     sp.add_argument("--days", type=int, default=7, help="etkinlik penceresi")
+    sp.add_argument("--exclude", action="append", help="projeyi disarida birak")
     sp.set_defaults(fn=cmd_dashboard)
 
     sp = sub.add_parser("eval", help="Proje eval setini calistir")
