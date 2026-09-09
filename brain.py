@@ -21,6 +21,19 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Windows konsolu dar bir kod sayfasi olabilir (or. cp1254). Dosyalardan
+# okunan metin -- CONVENTIONS.md, ders kayitlari, STATUS.md, commit basliklari --
+# o sayfaya sigmayan tek bir karakter icerdiginde print() UnicodeEncodeError
+# firlatip TUM komutu cokertiyordu (brifing hic uretilemiyordu). Kodlamayi
+# degistirmiyoruz; yalnizca hata davranisini gevsetiyoruz: sigmayan karakter
+# "?" olur, komut calismaya devam eder.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(errors="replace")
+    except (AttributeError, ValueError, OSError):
+        pass
+
+
 # --------------------------------------------------------------------------
 # Sabitler
 # --------------------------------------------------------------------------
