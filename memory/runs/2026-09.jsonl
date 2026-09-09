@@ -1,1 +1,2 @@
 {"ts": "2026-09-02T11:02:58+00:00", "project": "gokyazi", "skill": "flutter-test-kos", "result": "pass", "autonomous": true, "review_min": 3.0, "note": ""}
+{"ts": "2026-09-09T09:17:35+00:00", "project": "onoz-brain", "skill": "anonim-export", "result": "pass", "autonomous": true, "review_min": 0, "note": "ilk koşu: taslak dataset üretildi, selftest + yerinde test gecti (6 dosya, deterministik)"}

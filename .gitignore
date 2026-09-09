@@ -12,3 +12,6 @@ memory/**/*.tmp
 projects.json
 
 memory/dashboard.html
+
+# brain isaret dosyasi (yerel baglama; repo icerigi degil)
+.brain.json

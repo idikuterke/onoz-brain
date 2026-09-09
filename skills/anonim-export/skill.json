@@ -1,0 +1,9 @@
+{
+  "id": "anonim-export",
+  "level": "L0",
+  "applies_to": [],
+  "tags": ["publishing", "opendata", "export"],
+  "verify": "python test.py",
+  "created": "2026-09-09T08:00:00+00:00",
+  "archived": false
+}
