@@ -21,14 +21,14 @@ sonundaki gercek-durum tablosunu okur.
   - `gokturk-vision` (SDXL/ControlNet, E:\gokturk_vision)
   - `gokturk-verify` (VLM OCR/Dataset, E:\gokturk_verify)
 - **Eval setleri**:
-  - `kutun-arinisi`: 10 regression (%90) + 2 agent gorevi (KA-A05, KA-A07).
-    Sette `needs_adjust: true` isaretli gorev KALMADI (KA-07 ve KA-10 kalibre edildi).
+  - `kutun-arinisi`: 10 regression (%100) + 2 agent gorevi (KA-A05, KA-A07).
+    Sette `needs_adjust: true` isaretli gorev KALMADI. KA-10 EMEKLI (asagi bak),
+    yerine KA-11 (D-008 kanon bekcisi) eklendi.
   - `gokturk-vision`: 3 regression (%100) - syntax derleme, manifest semasi, workflow dugumleri.
   - `gokturk-verify`: 1 regression (%100) - 38 sinifli kilitli etiket SHA256 degismezlik kontrolu.
 - **Baselineler ve Otonomi Kayitlari**:
-  - `kutun-arinisi`: PROJE SAGLIGI 9/10 (%90) - `memory/evals/20260909-122559-kutun-arinisi.json`
-    (2026-09-09'a kadar 8/10 idi; KA-07 kapandi). Kalan tek acik: KA-10 (save round-trip,
-    testi henuz yazilmadi - exit=1 "beklenen PASS satiri yok").
+  - `kutun-arinisi`: PROJE SAGLIGI 10/10 (%100) - `memory/evals/20260909-135952-kutun-arinisi.json`
+    (ayni gun 8/10 -> 9/10 -> 10/10). Acik regression kalmadi.
   - `gokturk-vision`: PROJE SAGLIGI 3/3 (%100) - `memory/evals/20260902-120557-gokturk-vision.json`.
   - `gokturk-verify`: PROJE SAGLIGI 1/1 (%100) - `memory/evals/20260902-120609-gokturk-verify.json`.
   - AJAN OTONOMISI: `trial finish` `--solver (cold|assisted|restore)` bayragiyla calisir.
@@ -41,8 +41,12 @@ sonundaki gercek-durum tablosunu okur.
     DIKKAT: eval/trial kayitlari bu sayaci HAREKET ETTIRMEZ; yalniz `brain log` besler.
 - **Gorev sirasi**: 1) KA-A07 (TAMAMLANDI - `tests/test_etkilesim_zinciri.gd`, `f8386e2`),
   2) KA-A05 (TAMAMLANDI 2026-09-09 - `tests/test_yelbegen.gd`, `f18f114`; ilk cold olcum,
-  uretim kodu degismedi), 3) KA-A06 (save round-trip) **HENUZ YAZILMADI** - tasks.jsonl'da
-  boyle bir gorev yok; KA-10'u kapatacak ajan gorevi once tasarlanmali.
+  uretim kodu degismedi), 3) KA-A06 **IPTAL** - save round-trip ajan gorevi TASARLANMAYACAK.
+  Gerekce: 00_CANON/DECISIONS.md D-008 save/load'u ACIKCA yasakliyor ("ajanlarin
+  kendiliginden eklemesini engellemek icin"). Boyle bir gorev, ajana kanonu ihlal
+  ettirirdi; ayrica kayit formati mimari karardir (README: donguye asla girmeyecekler).
+  Yerine KA-11 kanon bekcisi kondu. **Siradaki ajan gorevi bos** - yeni kor nokta
+  bulunup tasarlanmali.
 - **brain status / activity / dashboard** komutlari calisiyor; pano:
   memory/dashboard.html (tek dosya, offline).
 - Lesson kayitlari (2): `20260901-223605-repo-sanity-check.md`,
@@ -91,6 +95,11 @@ sonundaki gercek-durum tablosunu okur.
   **PRIVATE**. `master` ve `wip/agustos-2026` dallarinin ikisi de push'landi;
   18 gunluk calisma artik tek diskte degil. (`projects.json` remote alani
   tutmaz - motor bunu bilmez, kayit yeri burasidir.)
+- **D-008 makineyle korunuyor (2026-09-09)**: KA-11 regression'i
+  `evals/kutun-arinisi/helpers/check_no_save_system.gd` ile `scripts/` altini tarar;
+  `user://`, `FileAccess.WRITE`, `ResourceSaver`, `store_*` bulursa KALIR. Salt-okur
+  erisim mesrudur (DataDB manifest'i READ ile okur) ve isaretlenmez. Mutasyonla
+  dogrulandi: game_state.gd'ye sahte `kaydet()` eklenince ihlal satirlariyla KALDI.
 - **.gitattributes eklendi (`9b92851`)**: Godot metin kaynaklari eol=lf'e
   sabitlendi, ikili varliklar binary isaretlendi. Renormalizasyon uretmedi.
   Not: bu satir-sonu sebebini cozer, bayat stat kaydi sebebini COZMEZ -
@@ -110,8 +119,8 @@ sonundaki gercek-durum tablosunu okur.
   `kutun-arinisi`, `gokturk-studio`, `onoz-web`, `gokturk-vision`, `gokturk-verify`.
 - **Ilk Soguk Olcum (KA-A05)**: TAMAMLANDI (2026-09-09). Dorduncu cozucu oturumu
   sifir baglamli calisti; `--solver cold` ile kaydedildi.
-- **KA-A06 tasarimi**: KA-10'u (save round-trip) kapatacak ajan gorevi HENUZ YOK.
-  Yazilirken kirmizi cizgi 7 gecerli: tasarlayan oturum cozemez.
+- **KA-A06**: IPTAL EDILDI (D-008). Yeni bir ajan gorevi tasarlanacaksa once mevcut
+  kodda gercek bir kor nokta bulunmali; kirmizi cizgi 7 gecerli (tasarlayan cozemez).
 - **Sicil Birikimi**: 2/10 kosu. Gercek gelistirmeler sirasinda kosulan testler
   `brain log` ile kaydedilerek bariyer asilacak. Eval ve trial kayitlari bu sayaci
   BESLEMEZ - 2026-09-09 gibi olcum gunleri `brain stats`'i hareket ettirmez.

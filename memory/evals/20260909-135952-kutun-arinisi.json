@@ -1,0 +1,69 @@
+{
+  "ts": "2026-09-09T13:59:52+00:00",
+  "project": "kutun-arinisi",
+  "passed": 10,
+  "total": 10,
+  "pass_rate": 1.0,
+  "results": [
+    {
+      "id": "KA-01",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "KA-02",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "KA-03",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "KA-04",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "KA-05",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "KA-06",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "KA-07",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "KA-08",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "KA-09",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "KA-11",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    }
+  ]
+}
