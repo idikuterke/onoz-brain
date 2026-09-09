@@ -38,14 +38,16 @@ hash `2c6c77b8…85a5`) iki depoda birlikte koruyor — zincir bütünlüğü iy
 | Görev | KALDI kanıtı |
 |---|---|
 | GS-01 kilitli JSON SHA256 | ✅ **BUGÜN BİZZAT**: dosyaya bayt eklendi → `--task GS-01` → 0/1 KALDI (exit=1) → byte-aynı geri alma → SHA256 eşleşti → 1/1 GEÇTİ (exit=0) |
-| GS-02 tüm .py derleme | ⏸️ bekliyor: geçici bozuk `.py` oluşturma/silme adımı güvenlik onayına takıldı; görev mantıksal olarak GS-01 ile aynı mutasyon desenini kullanır |
-| GS-03 SpellingEngine yükleme | ⏸️ bekliyor: `pipeline/product/rules_engine.py` geçici ad değiştirme adımı aynı onay bekliyor |
+| GS-02 tüm .py derleme | ✅ **kanıtlandı 2026-09-09**: kökte bozuk `_denetim_mut.py` → KALDI (0/1) → dosya silindi → GEÇTİ (1/1). Proje ağacı 15 kirli dosyayla başlayıp 15 ile bitti, kalıntı yok. |
+| GS-03 SpellingEngine yükleme | ✅ **kanıtlandı 2026-09-09**: `pipeline/product/rules_engine.py` geçici taşındı → KALDI (0/1) → geri alındı → GEÇTİ (1/1). Taşıma/geri alma olduğu için dosya byte-aynı; ağaç 15 → 15. |
 
 ## Özet karar önerileri (Han onayına)
 
 1. GV-01'i rglob'a çevir (alt dizin derleme kapsamı) — tek satırlık verify değişikliği.
-2. GS-02/GS-03 mutasyon kanıtlarını bir sonraki oturumda tamamla (geçici dosya
-   izniyle) veya bunları Han'ın kendi koşumunda kanıtla.
+2. ~~GS-02/GS-03 mutasyon kanıtları~~ **TAMAMLANDI 2026-09-09** (bkz. 3. bölüm).
+   Kalan tek kanıt borcu: GV-01 (gokturk-vision kök .py derleme) için doğrudan
+   mutasyon koşumu, ve GVER-01'in kendi kopyası (E:\gokturk_verify) üzerinde
+   doğrudan koşum — bugün yalnız eşdeğerlik yoluyla kanıtlandı.
 3. Her eval setinin yanına `kaldi-kanitlar.md` alışkanlığı: hangi görev hangi
    mutasyonla kanıtlandı, tarih + çıktı. (Bu raporun 3. bölümü ilk örnek.)
 
