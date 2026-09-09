@@ -1,0 +1,2 @@
+{"id": "IH-01", "kind": "regression", "title": "Tum Python kaynaklari derlenir (core + hat scriptleri)", "verify": "python \"%BRAIN_HOME%/evals/icerik-hatti/helpers/check_sources.py\"", "skills": ["pytest-kos"], "timeout": 120, "needs_adjust": false}
+{"id": "IH-02", "kind": "regression", "title": "global.json ve 8 hat pipeline.json'i gecerli", "verify": "python \"%BRAIN_HOME%/evals/icerik-hatti/helpers/check_configs.py\"", "timeout": 60, "needs_adjust": false}

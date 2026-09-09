@@ -62,3 +62,20 @@ denetim, çözücünün raporu okunarak yapılır. Verify'a dosya içeriği grep
 düşünüldü ama çözümün şeklini gereksiz kısıtladığı için **eklenmedi** — KA-07'de
 öğrenildiği gibi, doğrulama gerçek şeyi ölçmeli, geçerli çözümleri bloklayan bir
 vekil değil.
+
+---
+
+# icerik-hatti (IH-01, IH-02) — 2026-09-09
+
+| Görev | Mutasyon | Sonuç |
+|---|---|---|
+| IH-01 tüm .py derlenir | `core/_denetim_mut.py` bozuk sözdizimi | **KALDI** 0/1 → silindi → GEÇTİ |
+| IH-02 config bütünlüğü | `gokyazi-tarot/configs/pipeline.json` bozuk JSON | **KALDI** 0/1 → geri → GEÇTİ |
+
+Ağaç 11 kirli dosyayla başladı, 11 ile bitti.
+
+**`python -m core saglik` bilerek eval görevi YAPILMADI.** Çalışan bir ComfyUI
+sunucusuna bakıyor (`sunucu: ok (surum 0.35.0, RAM bos 10.0 GB)`); sunucu kapalıyken
+kalır ve projeyi değil ortamı ölçer. Aynı gerekçe Ajan 2'nin Unity `-runTests`
+kararında da geçerliydi. `saglik` elle koşulan bir kapı olarak kalır; eval seti
+sunucudan bağımsız, deterministik ölçülerle sınırlı tutuldu.
