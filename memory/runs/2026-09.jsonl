@@ -1,2 +1,3 @@
 {"ts": "2026-09-02T11:02:58+00:00", "project": "gokyazi", "skill": "flutter-test-kos", "result": "pass", "autonomous": true, "review_min": 3.0, "note": ""}
 {"ts": "2026-09-09T09:17:35+00:00", "project": "onoz-brain", "skill": "anonim-export", "result": "pass", "autonomous": true, "review_min": 0, "note": "ilk koşu: taslak dataset üretildi, selftest + yerinde test gecti (6 dosya, deterministik)"}
+{"ts": "2026-09-09T15:44:31+00:00", "project": "kutun-arinisi", "skill": "godot-test-runner", "result": "pass", "autonomous": true, "review_min": 8.0, "note": "4793960 oncesi kapi: hasar_ver duzeltmesi + test_player_olum.gd icin tam suite bagimsiz kosuldu (192/192, exit 0). Eval/trial kaydi degil, gercek commit'in dogrulama kapisi."}
