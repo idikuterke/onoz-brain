@@ -1,0 +1,3 @@
+{"id": "GG-01", "kind": "regression", "title": "flutter analyze temiz (0 issue)", "verify": "flutter analyze", "skills": ["flutter-analyze"], "timeout": 300, "needs_adjust": false}
+{"id": "GG-02", "kind": "regression", "title": "Tum test paketi gecer (164 test)", "verify": "flutter test", "skills": ["flutter-test-kos"], "timeout": 600, "needs_adjust": false}
+{"id": "GG-03", "kind": "regression", "title": "Tarih anahtari roundtrip testi mevcut ve gecer", "verify": "flutter test --plain-name \"key ve parseKey simetrik\"", "skills": ["flutter-test-kos"], "timeout": 300, "needs_adjust": false}

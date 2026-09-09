@@ -1,0 +1,2 @@
+{"id": "RT-01", "kind": "regression", "title": "flutter analyze temiz (0 issue)", "verify": "flutter analyze", "skills": ["flutter-analyze"], "timeout": 300, "needs_adjust": false}
+{"id": "RT-02", "kind": "regression", "title": "Test paketi gecer (RotaApp builds)", "verify": "flutter test", "skills": ["flutter-test-kos"], "timeout": 600, "needs_adjust": false}

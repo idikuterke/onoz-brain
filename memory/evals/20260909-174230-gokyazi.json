@@ -1,0 +1,21 @@
+{
+  "ts": "2026-09-09T17:42:30+00:00",
+  "project": "gokyazi",
+  "passed": 1,
+  "total": 2,
+  "pass_rate": 0.5,
+  "results": [
+    {
+      "id": "YZ-01",
+      "ok": false,
+      "detail": "exit=1",
+      "kind": "regression"
+    },
+    {
+      "id": "YZ-02",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    }
+  ]
+}

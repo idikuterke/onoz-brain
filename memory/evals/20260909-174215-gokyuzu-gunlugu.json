@@ -1,0 +1,27 @@
+{
+  "ts": "2026-09-09T17:42:15+00:00",
+  "project": "gokyuzu-gunlugu",
+  "passed": 3,
+  "total": 3,
+  "pass_rate": 1.0,
+  "results": [
+    {
+      "id": "GG-01",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "GG-02",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "GG-03",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    }
+  ]
+}
