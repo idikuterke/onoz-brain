@@ -21,21 +21,28 @@ sonundaki gercek-durum tablosunu okur.
   - `gokturk-vision` (SDXL/ControlNet, E:\gokturk_vision)
   - `gokturk-verify` (VLM OCR/Dataset, E:\gokturk_verify)
 - **Eval setleri**:
-  - `kutun-arinisi`: 10 regression (%100) + 2 agent gorevi (KA-A05, KA-A07).
+  - `kutun-arinisi`: 10 regression (%100) + 3 agent gorevi (KA-A05, KA-A07, KA-A08).
     Sette `needs_adjust: true` isaretli gorev KALMADI. KA-10 EMEKLI (asagi bak),
     yerine KA-11 (D-008 kanon bekcisi) eklendi.
   - `gokturk-vision`: 3 regression (%100) - syntax derleme, manifest semasi, workflow dugumleri.
   - `gokturk-verify`: 1 regression (%100) - 38 sinifli kilitli etiket SHA256 degismezlik kontrolu.
 - **Baselineler ve Otonomi Kayitlari**:
-  - `kutun-arinisi`: PROJE SAGLIGI 10/10 (%100) - `memory/evals/20260909-135952-kutun-arinisi.json`
-    (ayni gun 8/10 -> 9/10 -> 10/10). Acik regression kalmadi.
+  - `kutun-arinisi`: PROJE SAGLIGI 10/10 (%100) - `memory/evals/20260909-150044-kutun-arinisi.json`
+    (ayni gun 8/10 -> 9/10 -> 10/10). Acik regression kalmadi. Son baseline KA-A08'in
+    cekirdek duzeltmesinden SONRA alindi; hasar_ver degisikligi hicbir testi kirmadi.
   - `gokturk-vision`: PROJE SAGLIGI 3/3 (%100) - `memory/evals/20260902-120557-gokturk-vision.json`.
   - `gokturk-verify`: PROJE SAGLIGI 1/1 (%100) - `memory/evals/20260902-120609-gokturk-verify.json`.
   - AJAN OTONOMISI: `trial finish` `--solver (cold|assisted|restore)` bayragiyla calisir.
-    **ILK SOGUK OLCUM ALINDI (2026-09-09)**: KA-A05 dorduncu cozucu oturumunda sifir
-    baglamli olarak cozuldu; `memory/evals/20260909-120257-kutun-arinisi.json`, `kind: agent`.
-    (Ilk uc oturum cozucu altyapi hatasiyla dustu, ize birakmadan.) KA-A07 hala
-    `agent-restore` olarak durur - otonomi sayilmaz.
+    **SOGUK OLCUM: 2/2 GECTI (2026-09-09)**
+      - KA-A05: `memory/evals/20260909-120257-kutun-arinisi.json` (`kind: agent`).
+        Dorduncu cozucu oturumunda cozuldu; ilk uc oturum cozucu altyapi hatasiyla
+        dustu, ize birakmadan. Kod DOGRUYDU, ajan dokunmadi (dogru karar).
+      - KA-A08: `memory/evals/20260909-145738-kutun-arinisi.json` (`kind: agent`).
+        Kod HATALIYDI, ajan teshis edip duzeltti (dogru karar).
+      Ikisi birlikte iki yonlu olcum verir: ayni prompt cumlesi ("ancak gercekten
+      hataliysa duzelt"), zit dogru cevaplar. Her seye dokunan ajan A05'te, hicbir
+      seye dokunmayan A08'de kalir.
+    KA-A07 hala `agent-restore` olarak durur - otonomi sayilmaz, soguk cozum bekliyor.
   - PROJE SICILI (`brain stats`): 2 gercek kosu (`gokyazi`/`flutter-test-kos`,
     `onoz-brain`/`anonim-export`), %100 otonomi. 10 kosu bariyerine 8 kosu var.
     DIKKAT: eval/trial kayitlari bu sayaci HAREKET ETTIRMEZ; yalniz `brain log` besler.
@@ -45,8 +52,12 @@ sonundaki gercek-durum tablosunu okur.
   Gerekce: 00_CANON/DECISIONS.md D-008 save/load'u ACIKCA yasakliyor ("ajanlarin
   kendiliginden eklemesini engellemek icin"). Boyle bir gorev, ajana kanonu ihlal
   ettirirdi; ayrica kayit formati mimari karardir (README: donguye asla girmeyecekler).
-  Yerine KA-11 kanon bekcisi kondu. **Siradaki ajan gorevi bos** - yeni kor nokta
-  bulunup tasarlanmali.
+  Yerine KA-11 kanon bekcisi kondu.
+  4) KA-A08 (TAMAMLANDI 2026-09-09 - oyuncu olum sinyali olumden sonra tekrar
+  yayiliyordu; `GameState.hasar_ver` durum kontrolu yerine gecis kontrolune cevrildi,
+  `tests/test_player_olum.gd` yazildi. Tunga: `4793960` + `bdb8fd0`. Ikinci cold olcum.)
+  **Siradaki ajan gorevi bos** - yeni kor nokta bulunup tasarlanmali; alternatif olarak
+  KA-A07 soguk oturumda cozdurulup `agent-restore` kaydi gercek olcumle degistirilebilir.
 - **brain status / activity / dashboard** komutlari calisiyor; pano:
   memory/dashboard.html (tek dosya, offline).
 - Lesson kayitlari (2): `20260901-223605-repo-sanity-check.md`,
@@ -119,8 +130,12 @@ sonundaki gercek-durum tablosunu okur.
   `kutun-arinisi`, `gokturk-studio`, `onoz-web`, `gokturk-vision`, `gokturk-verify`.
 - **Ilk Soguk Olcum (KA-A05)**: TAMAMLANDI (2026-09-09). Dorduncu cozucu oturumu
   sifir baglamli calisti; `--solver cold` ile kaydedildi.
-- **KA-A06**: IPTAL EDILDI (D-008). Yeni bir ajan gorevi tasarlanacaksa once mevcut
-  kodda gercek bir kor nokta bulunmali; kirmizi cizgi 7 gecerli (tasarlayan cozemez).
+- **KA-A06**: IPTAL EDILDI (D-008). Yerine KA-A08 tasarlandi ve ayni gun soguk
+  oturumda cozuldu. Yeni ajan gorevi tasarlanacaksa once mevcut kodda gercek bir kor
+  nokta bulunmali; kirmizi cizgi 7 gecerli (tasarlayan cozemez).
+- **KA-A07 soguk olcumu**: Gorev cozulmus ama kayit `agent-restore` (git'ten geri
+  alinmisti). Sifir baglamli bir oturumda yeniden cozdurulurse otonomi egrisine
+  ucuncu gercek veri noktasi girer.
 - **Sicil Birikimi**: 2/10 kosu. Gercek gelistirmeler sirasinda kosulan testler
   `brain log` ile kaydedilerek bariyer asilacak. Eval ve trial kayitlari bu sayaci
   BESLEMEZ - 2026-09-09 gibi olcum gunleri `brain stats`'i hareket ettirmez.
