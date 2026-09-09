@@ -27,7 +27,7 @@ doğruluyor — şema denetimi sığ. Bir `schema.json` alan listesiyle genişle
 
 | Görev | Koşuyor mu? | Tuzak? | KALDI kanıtı? |
 |---|---|---|---|
-| GVER-01 kilitli etiket SHA256 | ✅ evet | ✅ yok | ⚠️ doğrudan değil — **eşdeğerlik yoluyla**: aynı dosyanın gokturk-studio kopyası üzerinde GS-01 ile bugün bizzat kanıtlandı (KALDI exit=1 → byte-aynı geri alma → SHA256 eşleşti → exit=0). E:\gokturk_verify kopyasında doğrudan mutasyon koşumu yapılmadı. |
+| GVER-01 kilitli etiket SHA256 | ✅ evet | ✅ yok | ✅ **DOĞRUDAN kanıtlandı 2026-09-09**: `E:\gokturk_verify\gokturk_labels_v1_locked.json` (39.181 bayt) dosyasına 1 bayt eklendi → **KALDI** (0/1) → yedekten byte-aynı geri alma → **GEÇTİ** (1/1). Ağaç 0 → 0, `git diff` boş. Önceki eşdeğerlik kanıtı (gokturk-studio kopyası, GS-01) artık gereksiz. |
 
 **Bulgu V-1 (pozitif):** GS-01 ile GVER-01 aynı kilitli şemayı (aynı beklenen
 hash `2c6c77b8…85a5`) iki depoda birlikte koruyor — zincir bütünlüğü iyi kurulu.
@@ -58,9 +58,9 @@ hash `2c6c77b8…85a5`) iki depoda birlikte koruyor — zincir bütünlüğü iy
    yalnızca kök dizinin derlendiğini gösterir; alt dizinler hakkında bilgi
    vermez. Sonraki kayıtlar daha geniş bir kontrolü ifade eder.
 2. ~~GS-02/GS-03 mutasyon kanıtları~~ **TAMAMLANDI 2026-09-09** (bkz. 3. bölüm).
-   Kalan tek kanıt borcu: GV-01 (gokturk-vision kök .py derleme) için doğrudan
-   mutasyon koşumu, ve GVER-01'in kendi kopyası (E:\gokturk_verify) üzerinde
-   doğrudan koşum — bugün yalnız eşdeğerlik yoluyla kanıtlandı.
+   **Kanıt borcu KALMADI**: GV-01 (bkz. madde 1) ve GVER-01 (bkz. 2. bölüm)
+   doğrudan mutasyonla kanıtlandı. Üç eval setinin de her görevi artık
+   "ölçtüğü şey ortadan kalkınca KALIYOR mu" testinden geçmiş durumda.
 3. Her eval setinin yanına `kaldi-kanitlar.md` alışkanlığı: hangi görev hangi
    mutasyonla kanıtlandı, tarih + çıktı. (Bu raporun 3. bölümü ilk örnek.)
 
