@@ -1,0 +1,2 @@
+{"id": "IDLE-01", "kind": "regression", "title": "Asset ve .meta dosya ciftleri eksiksiz ve birebir eslesir", "verify": "python \"%BRAIN_HOME%/evals/onoz-idle/helpers/check_meta_pairs.py\"", "timeout": 60, "needs_adjust": false}
+{"id": "IDLE-02", "kind": "regression", "title": "ProjectSettings ve EditorBuildSettings sahne yollari gecerlidir", "verify": "python \"%BRAIN_HOME%/evals/onoz-idle/helpers/check_project_settings.py\"", "timeout": 30, "needs_adjust": false}

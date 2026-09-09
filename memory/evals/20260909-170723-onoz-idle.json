@@ -1,0 +1,21 @@
+{
+  "ts": "2026-09-09T17:07:23+00:00",
+  "project": "onoz-idle",
+  "passed": 2,
+  "total": 2,
+  "pass_rate": 1.0,
+  "results": [
+    {
+      "id": "IDLE-01",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "IDLE-02",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    }
+  ]
+}

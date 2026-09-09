@@ -1,0 +1,2 @@
+{"id": "WEB-01", "kind": "regression", "title": "ESLint temiz gecer, kod ve formatlama hatasi yok", "verify": "npm run lint", "timeout": 120, "needs_adjust": false}
+{"id": "WEB-02", "kind": "regression", "title": "Next.js production build hatasiz uretir", "verify": "python \"%BRAIN_HOME%/skills/web-build-dogrulama/test.py\" --project .", "skills": ["web-build-dogrulama"], "timeout": 300, "needs_adjust": false}
