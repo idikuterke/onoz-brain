@@ -44,3 +44,21 @@ sonrası düz `git commit`, `tengri_fast_app`'te kullanıcının önceden stage'
 dosyasını da içine aldı. `git reset --soft HEAD~1` ile geri alındı (stage durumu
 korunur) ve `git commit -- STATUS.md` pathspec biçimiyle yalnız o dosya commit'lendi.
 Hedef projede commit atarken **daima pathspec kullan**.
+
+---
+
+# RT-A01 (ajan görevi) — tasarım doğrulaması, 2026-09-09
+
+| Kontrol | Sonuç |
+|---|---|
+| `setup` sonrası verify KALIYOR mu (k.ç. 1) | ✅ `VERIFY_EXIT=1` |
+| "Testi sil" hilesi tutuyor mu | ❌ tutmuyor — `flutter test` **1**, `--plain-name` **1** (dosya hiç yokken "No tests were found") |
+| `teardown` ağacı temiz bırakıyor mu | ✅ 0 kirli dosya, bekleyen deneme yok |
+
+**Bilinen sınır:** verify, testin *silinmesini* ve *adının değişmesini* makineyle
+engelliyor ama **içinin boşaltılmasını** (örn. `pumpWidget` kaldırılıp
+`expect(true, true)` bırakılması) engelleyemiyor. Prompt bunu açıkça yasaklıyor;
+denetim, çözücünün raporu okunarak yapılır. Verify'a dosya içeriği grep'i eklemek
+düşünüldü ama çözümün şeklini gereksiz kısıtladığı için **eklenmedi** — KA-07'de
+öğrenildiği gibi, doğrulama gerçek şeyi ölçmeli, geçerli çözümleri bloklayan bir
+vekil değil.
