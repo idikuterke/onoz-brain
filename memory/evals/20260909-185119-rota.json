@@ -1,0 +1,21 @@
+{
+  "ts": "2026-09-09T18:51:19+00:00",
+  "project": "rota",
+  "passed": 2,
+  "total": 2,
+  "pass_rate": 1.0,
+  "results": [
+    {
+      "id": "RT-01",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "RT-02",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    }
+  ]
+}
