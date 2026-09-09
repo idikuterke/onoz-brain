@@ -1,4 +1,4 @@
-# HANDOFF — onoz-brain kurulum durumu (2026-09-02)
+# HANDOFF — onoz-brain kurulum durumu (2026-09-02, guncelleme 2026-09-09)
 
 Bu dosya, kurulumu yapan ajanin (AutoCoder) bitis raporudur. Devralan ajan
 once bunu, sonra SETUP_BRIEF.md (kurulum sozlesmesi) ve skills/CATALOG.md
@@ -21,19 +21,33 @@ sonundaki gercek-durum tablosunu okur.
   - `gokturk-vision` (SDXL/ControlNet, E:\gokturk_vision)
   - `gokturk-verify` (VLM OCR/Dataset, E:\gokturk_verify)
 - **Eval setleri**:
-  - `kutun-arinisi`: 10 regression (%80) + 2 agent gorevi.
+  - `kutun-arinisi`: 10 regression (%90) + 2 agent gorevi (KA-A05, KA-A07).
+    Sette `needs_adjust: true` isaretli gorev KALMADI (KA-07 ve KA-10 kalibre edildi).
   - `gokturk-vision`: 3 regression (%100) - syntax derleme, manifest semasi, workflow dugumleri.
   - `gokturk-verify`: 1 regression (%100) - 38 sinifli kilitli etiket SHA256 degismezlik kontrolu.
 - **Baselineler ve Otonomi Kayitlari**:
-  - `kutun-arinisi`: PROJE SAGLIGI 8/10 (%80) - `memory/evals/20260902-094237-kutun-arinisi.json`.
+  - `kutun-arinisi`: PROJE SAGLIGI 9/10 (%90) - `memory/evals/20260909-122559-kutun-arinisi.json`
+    (2026-09-09'a kadar 8/10 idi; KA-07 kapandi). Kalan tek acik: KA-10 (save round-trip,
+    testi henuz yazilmadi - exit=1 "beklenen PASS satiri yok").
   - `gokturk-vision`: PROJE SAGLIGI 3/3 (%100) - `memory/evals/20260902-120557-gokturk-vision.json`.
   - `gokturk-verify`: PROJE SAGLIGI 1/1 (%100) - `memory/evals/20260902-120609-gokturk-verify.json`.
-  - AJAN OTONOMISI: `trial finish` artik `--solver (cold|assisted|restore)` bayragiyla calisir. KA-A07 cozumu git'ten geri alinarak dogrulandigi icin `agent-restore` olarak kayda gecirildi (OTONOMI tablosunda soguk olcum bekleniyor `-`).
-  - PROJE SICILI (`brain stats`): 1 gercek kosu (`gokyazi` / `flutter-test-kos`), %100 otonomi, 3 dk inceleme.
-- **Gorev sirasi**: 1) KA-A07 (TAMAMLANDI - `tests/test_etkilesim_zinciri.gd` yazildi, mutasyon kanitlandi ve Tunga'ya commit'lendi `f8386e2`), 2) KA-A05 (Yelbegen testi - ilk gercek cold otonomi olcumu olacak), 3) KA-A06 (save round-trip).
+  - AJAN OTONOMISI: `trial finish` `--solver (cold|assisted|restore)` bayragiyla calisir.
+    **ILK SOGUK OLCUM ALINDI (2026-09-09)**: KA-A05 dorduncu cozucu oturumunda sifir
+    baglamli olarak cozuldu; `memory/evals/20260909-120257-kutun-arinisi.json`, `kind: agent`.
+    (Ilk uc oturum cozucu altyapi hatasiyla dustu, ize birakmadan.) KA-A07 hala
+    `agent-restore` olarak durur - otonomi sayilmaz.
+  - PROJE SICILI (`brain stats`): 2 gercek kosu (`gokyazi`/`flutter-test-kos`,
+    `onoz-brain`/`anonim-export`), %100 otonomi. 10 kosu bariyerine 8 kosu var.
+    DIKKAT: eval/trial kayitlari bu sayaci HAREKET ETTIRMEZ; yalniz `brain log` besler.
+- **Gorev sirasi**: 1) KA-A07 (TAMAMLANDI - `tests/test_etkilesim_zinciri.gd`, `f8386e2`),
+  2) KA-A05 (TAMAMLANDI 2026-09-09 - `tests/test_yelbegen.gd`, `f18f114`; ilk cold olcum,
+  uretim kodu degismedi), 3) KA-A06 (save round-trip) **HENUZ YAZILMADI** - tasks.jsonl'da
+  boyle bir gorev yok; KA-10'u kapatacak ajan gorevi once tasarlanmali.
 - **brain status / activity / dashboard** komutlari calisiyor; pano:
   memory/dashboard.html (tek dosya, offline).
-- Lesson kaydi: memory/lessons/20260901-223605-repo-sanity-check.md.
+- Lesson kayitlari (2): `20260901-223605-repo-sanity-check.md`,
+  `20260909-121745-godot-test-runner.md` (Godot kosusu sonrasi agac kirliligi; iki ayri
+  sebep - satir-sonu ve bayat stat kaydi - ayirt etme yontemiyle birlikte).
 
 ## Kirmizi cizgiler (devralan ajan bunları ihlal etmez)
 
@@ -71,20 +85,36 @@ sonundaki gercek-durum tablosunu okur.
   autoload mimarisi, test izolasyonu (`GameState.sifirla()`) kurallari belgelendi.
   Ajan brifingi artik sifir-baglamli ajanlar icin tam ve ogrenmeye hazir.
 - Ajan gorevleri test yazinca: iyi test **projeye commit edilir** ->
-  regression KA-07 gecer (8 -> 9/10); ajan gorevi calismaya devam eder
-  (setup dosyayi yine siler).
+  regression KA-07 gecer; ajan gorevi calismaya devam eder (setup dosyayi
+  yine siler). 2026-09-09'da uygulandi: 8 -> 9/10.
+- **Remote eklendi (2026-09-09)**: `https://github.com/idikuterke/kutun-arinisi`
+  **PRIVATE**. `master` ve `wip/agustos-2026` dallarinin ikisi de push'landi;
+  18 gunluk calisma artik tek diskte degil. (`projects.json` remote alani
+  tutmaz - motor bunu bilmez, kayit yeri burasidir.)
+- **.gitattributes eklendi (`9b92851`)**: Godot metin kaynaklari eol=lf'e
+  sabitlendi, ikili varliklar binary isaretlendi. Renormalizasyon uretmedi.
+  Not: bu satir-sonu sebebini cozer, bayat stat kaydi sebebini COZMEZ -
+  ayrinti icin godot-test-runner dersi.
 
 ## Acik kalemler (kullanici isi)
 
-- **Git Remote Push**: TAMAMLANDI (`https://github.com/idikuterke/onoz-brain`).
-  Public repo devrede, tum gecmis ve eval kayitlari GitHub'da guvence altinda.
+- **Git Remote Push**: TAMAMLANDI.
+  - `onoz-brain`: `https://github.com/idikuterke/onoz-brain` (PUBLIC) - tum gecmis
+    ve eval kayitlari GitHub'da.
+  - `kutun-arinisi` (Tunga): `https://github.com/idikuterke/kutun-arinisi` (PRIVATE,
+    2026-09-09) - master + wip/agustos-2026.
+  - KALAN 9 PROJE HALA TEK DISKTE. `gokturk-vision` ve `gokturk-verify` (E: surucusu,
+    ikisinin de eval seti var) sıradaki adaylar; her biri ayri gorunurluk karari.
 - **STATUS.md Triyaji**: Uykudaki projeler (rota, onoz-idle vb.) panoyu kirletmemek
   icin bos birakilacak; son donemde aktif 5 projenin `Siradaki` satirlari girilecek:
   `kutun-arinisi`, `gokturk-studio`, `onoz-web`, `gokturk-vision`, `gokturk-verify`.
-- **Ilk Soguk Olcum (KA-A05)**: `brain trial start kutun-arinisi KA-A05` ile baslatilip
-  bagimsiz bos oturumda cozdurulecek ve `--solver cold` ile kaydedilecek.
-- **Sicil Birikimi**: Gercek gelistirmeler sirasinda kosulan testler `brain log` ile
-  kaydedilerek 10 kosuluk bariyer asilacak.
+- **Ilk Soguk Olcum (KA-A05)**: TAMAMLANDI (2026-09-09). Dorduncu cozucu oturumu
+  sifir baglamli calisti; `--solver cold` ile kaydedildi.
+- **KA-A06 tasarimi**: KA-10'u (save round-trip) kapatacak ajan gorevi HENUZ YOK.
+  Yazilirken kirmizi cizgi 7 gecerli: tasarlayan oturum cozemez.
+- **Sicil Birikimi**: 2/10 kosu. Gercek gelistirmeler sirasinda kosulan testler
+  `brain log` ile kaydedilerek bariyer asilacak. Eval ve trial kayitlari bu sayaci
+  BESLEMEZ - 2026-09-09 gibi olcum gunleri `brain stats`'i hareket ettirmez.
 - Cuma ritueli: `brain activity --days 7 --md --exclude career-ops > memory/haftalik/2026-Wxx.md`
   dosyaya yazilacak sekilde calistirilacak.
 
@@ -94,7 +124,7 @@ sonundaki gercek-durum tablosunu okur.
 brain status                                            # proje tablosu (SAGLIK / OTONOMI ayri)
 brain activity --days 30 --exclude career-ops           # commit siniflandirma
 brain dashboard --days 30 --exclude career-ops --open   # pano
-brain eval kutun-arinisi --kind regression --record     # %80 (8/10)
+brain eval kutun-arinisi --kind regression --record     # %90 (9/10)
 brain eval gokturk-vision --kind regression --record    # %100 (3/3)
 brain eval gokturk-verify --kind regression --record    # %100 (1/1)
 brain trial start kutun-arinisi <TASK>                  # iki-fazli ajan denemesi baslat
