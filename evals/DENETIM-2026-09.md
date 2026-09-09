@@ -43,7 +43,20 @@ hash `2c6c77b8…85a5`) iki depoda birlikte koruyor — zincir bütünlüğü iy
 
 ## Özet karar önerileri (Han onayına)
 
-1. GV-01'i rglob'a çevir (alt dizin derleme kapsamı) — tek satırlık verify değişikliği.
+1. ~~GV-01'i rglob'a çevir~~ **UYGULANDI 2026-09-09** (Han onayı).
+   Kapsam 20 kök `.py` → 28 dosyaya çıktı; eklenen 8 dosya projenin ÇEKİRDEĞİ
+   (`core/conformer.py`, `core/qa_gate.py`, `core/rasterizer.py`,
+   `core/translator.py`, `core/arc_layout.py`, `core/presets.py`,
+   `tools/augment_arc_engraved.py`, `tools/build_qa_proof_sheet.py`).
+   `__pycache__` ve `.git` hariç tutuldu; dosya bulunamazsa exit=2 (sessiz
+   geçiş engeli) eklendi.
+   **Kanıt:** `core/conformer.py`'ye sözdizimi hatası enjekte edildi → GV-01
+   **KALDI** (0/1) → byte-aynı geri alma → GEÇTİ (1/1). Eski `glob` sürümü bu
+   hatayı göremezdi. Ağaç 0 → 0.
+   **Karşılaştırılabilirlik notu (AGENT_EVAL_SPEC k.ç. 4):** GV-01 yerinde
+   değiştirildi, yeni ID açılmadı. Bu tarihten ÖNCEKİ "GV-01 geçti" kayıtları
+   yalnızca kök dizinin derlendiğini gösterir; alt dizinler hakkında bilgi
+   vermez. Sonraki kayıtlar daha geniş bir kontrolü ifade eder.
 2. ~~GS-02/GS-03 mutasyon kanıtları~~ **TAMAMLANDI 2026-09-09** (bkz. 3. bölüm).
    Kalan tek kanıt borcu: GV-01 (gokturk-vision kök .py derleme) için doğrudan
    mutasyon koşumu, ve GVER-01'in kendi kopyası (E:\gokturk_verify) üzerinde
