@@ -8,6 +8,10 @@ __pycache__/
 # Sadece yerel gecici dosyalar disarida:
 memory/**/*.tmp
 
+# Acik deneme kilitleri: sonuc degil, "agac su an bozuk" isareti.
+# finish/abort ile silinir; kalici kayit memory/evals altina yazilir.
+memory/trials/*.json
+
 # Yerel yollar iceriyor, public repoda paylasilmaz
 projects.json
 
