@@ -14,6 +14,10 @@ KALIBRASYON NOTLARI (2026-09-02, AutoCoder - Tunga gercek agaci):
 - inventory-stack: Tunga'da kapasite mekaniği YOK (GameState.esya_ekle
   limitsiz yiginlar). Kancasi testle KANITLANMIS bozmaya bagli: yigin
   uzer-yazmasi (test_envanter + test_boss yakalar, kanitli kosum).
+- ka-a08-player-olum-test-yok: kirli durum = testin yazilmamis olmasi. AYRICA
+  bu gorevde uretim kodu da hatalidir (GameState.hasar_ver'de olum kilidi yok),
+  bu yuzden teardown yalniz dosyayi silmez, `git checkout -- scripts/` ile
+  ajanin yaptigi duzeltmeyi de geri alir. Kanca ile teardown ayni degildir.
 - ka-a05-yelbegen-test-yok / ka-a07-zincir-testi-yok: kirli durum = ilgili
   test dosyasinin henuz yazilmamis olmasi. Setup ve teardown ayni kancadir:
   ajanin yazdigi dosyayi kaldirir (olcum taze baslar). Tunga agaci
@@ -71,6 +75,13 @@ def inventory_stack(_):
     return patch(Path("scripts/core/game_state.gd"),
                  "envanter[id] = mevcut + adet",
                  "envanter[id] = adet  # BOZULDU: yigin uzer-yazmasi")
+
+
+@case("ka-a08-player-olum-test-yok")
+def ka_a08_player_olum_test_yok(_):
+    rc = remove_if_exists(Path("tests/test_player_olum.gd"))
+    remove_if_exists(Path("tests/test_player_olum.gd.uid"))
+    return rc
 
 
 @case("ka-a05-yelbegen-test-yok")
