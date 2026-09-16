@@ -1,0 +1,19 @@
+{
+  "id": "3d-viewport-render",
+  "level": "L0",
+  "applies_to": [
+    "3d",
+    "python-tool",
+    "video"
+  ],
+  "tags": [
+    "blender",
+    "render",
+    "camera",
+    "eevee",
+    "viewport"
+  ],
+  "verify": "python test.py",
+  "created": "2026-09-16T23:45:00+00:00",
+  "archived": false
+}

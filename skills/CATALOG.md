@@ -68,6 +68,15 @@ P0 = ilk kur, P1 = 30 gün içinde, P2 = ihtiyaç doğunca.
 | `ruff-lint` | `ruff check` exit 0 | P1 |
 | `cli-smoke` | `--help` exit 0, alt komutlar listeleniyor | P1 |
 
+### `applies_to: ["3d"]` — 3D & Mitoloji Animasyon Becerileri
+
+| Beceri | Doğrulama | Öncelik |
+|---|---|---|
+| `3d-mesh-temizle` | Blender headless non-manifold onarımı ve 45k decimation | **P0** |
+| `3d-animasyon-paketle` | Çoklu NLA track animasyon paketleme | **P0** |
+| `3d-viewport-render` | 3 noktalı ışıklandırma ve sinematik kamera yörünge MP4 render | **P0** |
+| `3d-wan-video-cila` | ComfyUI Wan 2.1 I2V ile sinematik AI video iyileştirme | **P1** |
+
 ### `applies_to: ["asset"]` — etiket, tip değil
 
 Asset pipeline becerileri `--tag asset` ile işaretlenen projelere. Bunlar **P2** — önce build/test hattı otursun.

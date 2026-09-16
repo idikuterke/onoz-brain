@@ -1,0 +1,19 @@
+{
+  "id": "3d-wan-video-cila",
+  "level": "L1",
+  "applies_to": [
+    "3d",
+    "python-tool",
+    "video"
+  ],
+  "tags": [
+    "comfyui",
+    "wan2.1",
+    "video",
+    "cinematic",
+    "i2v"
+  ],
+  "verify": "python test.py",
+  "created": "2026-09-16T23:45:00+00:00",
+  "archived": false
+}
