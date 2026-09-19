@@ -8,7 +8,7 @@ import pathlib
 import py_compile
 import sys
 
-KOKLER = ["core"]
+KOKLER = ["core", "core_3d"]   # core_3d: 2026-09 3D hatti cekirdegi (domain/application/infrastructure)
 HAT_DESENI = "*/scripts"
 ATLA = {"__pycache__", ".git", ".cache", "outputs", "node_modules"}
 
