@@ -1,0 +1,13 @@
+{
+  "id": "kos",
+  "level": "L0",
+  "applies_to": [],
+  "tags": [
+    "sicil",
+    "meta",
+    "cli"
+  ],
+  "verify": "python test.py",
+  "created": "2026-09-20T01:50:00+00:00",
+  "archived": false
+}

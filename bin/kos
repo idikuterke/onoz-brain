@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec python "${BRAIN_HOME:-$HOME/onoz-brain}/skills/kos/kos.py" "$@"

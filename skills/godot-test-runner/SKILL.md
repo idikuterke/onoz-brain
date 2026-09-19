@@ -4,7 +4,7 @@
 
 ## Ne zaman kullanılır
 
-Bir Godot projesinde GDScript test paketini (`res://tests/run_tests.gd`) headless modda
+Bir Godot projesinde GDScript test paketini (`res://tests/run_tests.tscn`) headless modda
 koşup geçti/kaldı kararı vermek için; feature bittiğinde, merge/export öncesinde ve
 repo-sanity-check zincirinin godot ayağı olarak çalıştırılır.
 
@@ -19,7 +19,7 @@ repo-sanity-check zincirinin godot ayağı olarak çalıştırılır.
 
 1. `godot` PATH'te aranır (`--godot` ile yol verilir); `project.godot` ve test script'i
    dosya sistemi üzerinde var mı diye bakılır — yoksa ön koşul (2).
-2. `godot --headless --path <proje> -s res://tests/run_tests.gd` koşulur.
+2. `godot --headless --path <proje> -s res://tests/run_tests.tscn` koşulur.
 3. Karar iki ayaklı: çıkış kodu 0 **ve** çıktıda `SCRIPT ERROR`/`ERROR:`/`Parse Error`/
    `Failed to load`/`Assertion failed` marker'ı yok.
 

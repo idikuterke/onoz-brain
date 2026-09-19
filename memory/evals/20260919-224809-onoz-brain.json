@@ -1,0 +1,21 @@
+{
+  "ts": "2026-09-19T22:48:09+00:00",
+  "project": "onoz-brain",
+  "passed": 2,
+  "total": 2,
+  "pass_rate": 1.0,
+  "results": [
+    {
+      "id": "OB-01",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "OB-02",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    }
+  ]
+}

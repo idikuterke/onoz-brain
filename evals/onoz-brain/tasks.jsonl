@@ -1,0 +1,2 @@
+{"id": "OB-01", "kind": "regression", "title": "kos becerisi hermetik testi gecer", "verify": "python \"%BRAIN_HOME%/skills/kos/test.py\"", "skills": ["kos"], "timeout": 120, "needs_adjust": false}
+{"id": "OB-02", "kind": "regression", "title": "anonim-export hermetik testi gecer", "verify": "python \"%BRAIN_HOME%/skills/anonim-export/test.py\"", "skills": ["anonim-export"], "timeout": 120, "needs_adjust": false}

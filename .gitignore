@@ -19,3 +19,6 @@ memory/dashboard.html
 
 # brain isaret dosyasi (yerel baglama; repo icerigi degil)
 .brain.json
+
+# Yerel arac shim'leri: mutlak yol icerir, public repoya girmez
+bin/godot.cmd

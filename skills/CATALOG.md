@@ -111,3 +111,13 @@ P1'e ancak P0'lar 10+ koşu biriktirdikten sonra geç. Aynı anda 25 beceri kurm
 | Gokturk Verify | python-tool (VLM OCR/Dataset) | bagli |
 | ROTA | flutter | bagli |
 | career-ops | web (Node.js) | bagli |
+
+## Meta beceriler — sicili besleyenler
+
+| Beceri | Doğrulama | Ne yapar |
+|---|---|---|
+| `kos` | `python test.py` (hermetik, 6 davranış) | Beceriyi projede koşturur, sonucu çıkış kodundan alır, `brain log`'u çağırır. `.brain.json`'dan projeyi bulur. Araç yoksa `KOSAMADI` (exit 2) der ve **yazmaz**. |
+
+Kullanım: projenin içinde `kos <beceri>`. `flutter test` yerine `kos flutter-test-kos`.
+Kurulum: `%BRAIN_HOME%in` PATH'e eklenir. Godot için `bin/godot.cmd` shim'i
+(yerel yol içerir, repoda değil) — `C:\Godot\...console.exe`'ye işaret eder.
