@@ -1,2 +1,3 @@
 {"id": "IH-01", "kind": "regression", "title": "Tum Python kaynaklari derlenir (core + hat scriptleri)", "verify": "python \"%BRAIN_HOME%/evals/icerik-hatti/helpers/check_sources.py\"", "skills": ["pytest-kos"], "timeout": 120, "needs_adjust": false}
 {"id": "IH-02", "kind": "regression", "title": "global.json ve 8 hat pipeline.json'i gecerli", "verify": "python \"%BRAIN_HOME%/evals/icerik-hatti/helpers/check_configs.py\"", "timeout": 60, "needs_adjust": false}
+{"id": "IH-03", "kind": "regression", "title": "Blender 4.5 headless baslar ve cleanup_mesh.py mevcut (3d-mesh-temizle)", "verify": "python \"%BRAIN_HOME%/skills/3d-mesh-temizle/test.py\"", "skills": ["3d-mesh-temizle"], "timeout": 120, "needs_adjust": false}

@@ -1,6 +1,6 @@
 {
   "id": "3d-wan-video-cila",
-  "level": "L1",
+  "level": "L0",
   "applies_to": [
     "3d",
     "python-tool",

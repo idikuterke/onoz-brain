@@ -1,20 +1,47 @@
-# 3d-mesh-temizle — Blender Headless Mesh Onarım ve Decimation
+# 3d-mesh-temizle — Blender headless mesh onarımı ve decimation
 
-Yapay zeka (Trellis / Hunyuan) tarafından üretilen ham `.glb` mesh dosyalarındaki yozlaşmış yüzeyleri, kopuk parçaları (floating islands) temizler, çakışan vertex'leri birleştirir ve yüzey sayısını hedef limite indirger.
+> Beceri kimliği: `3d-mesh-temizle` · Seviye ve sicil `skill.json` + `brain.py list` üzerinden okunur.
 
-## Ne İşe Yarar?
-- **Floating Island Temizliği:** Model dışındaki kopuk noktaları ayıklar.
-- **Merge by Distance:** 0.0005 mesafe içindeki çift noktaları birleştirir.
-- **Dissolve Degenerate:** Sıfır alanlı üçgenleri ve yozlaşmış kenarları siler.
-- **Manifold Garantisi:** Non-manifold edge sayısını sıfıra indirir.
-- **Decimate:** Modeli UV koordinatlarını koruyarak 45.000 yüzeye düşürür.
+## Ne zaman kullanılır
 
-## Kullanım
-```powershell
-"C:\Program Files\Blender Foundation\Blender 4.5\blender.exe" --background --python "E:\içerik üretim hattı\mitoloji-3d\blender_scripts\cleanup_mesh.py" -- <input_glb> <output_glb> [target_faces]
+Trellis / Hunyuan gibi görüntüden-3D üreticilerin verdiği ham `.glb`
+mesh'lerini oyun motoruna sokmadan önce temizlemek için: kopuk parçalar
+(floating islands), 0.0005 mesafe içindeki çift noktalar, sıfır alanlı üçgenler
+ve yozlaşmış kenarlar. Her AI üretimi mesh'in **ilk** ve **zorunlu** adımı.
+
+## Kullanılmaz
+
+- **Riglenecek karakter gövdeleri için.** Projenin K1 kararı (`docs/DEVAM.md`):
+  görüntüden-3D yanlış topoloji verir, temizlik bunu düzeltmez — riglenmiş temel
+  gövde (MPFB2) kullanılır. Bu beceri prop ve dekor içindir, karakter için değil.
+- Elle modellenmiş, topolojisi kasıtlı mesh'lerde — decimation kasıtlı kenar
+  akışını bozar.
+- Merge mesafesi 0.0005'in üstüne çıkarılarak — ince detaylar (parmak, kulak)
+  birleşir.
+- Blender 5.x ile — K10: MPFB2'de Blender 5 kırılması var, hat 4.5'te kalır.
+
+## Nasıl çalışır
+
+1. Blender 4.5 `--background` modunda `blender_scripts/cleanup_mesh.py` koşar.
+2. Sırayla: floating island temizliği → merge by distance → dissolve degenerate
+   → decimation.
+3. Girdi: ham `.glb`. Çıktı: temizlenmiş `.glb`.
+
+## Doğrulama
+
+```
+python test.py
 ```
 
-## Girdi ve Çıktı
-- **Girdi:** Ham `.glb` dosyası.
-- **Çıktı:** Temizlenmiş, UV dokulu ve optimize `.glb` dosyası.
-- **Çıktı Logu:** `CLEANUP_RESULT:{"success": true, "final_faces": 45000, "is_manifold": true}`
+Beklenen: çıkış kodu 0. **Test ne ölçüyor:** Blender 4.5'in kurulu olduğunu ve
+`--background --python-expr` ile gerçekten başlayıp `BLENDER_OK` bastığını,
+ayrıca `cleanup_mesh.py`'nin var olduğunu. Dört beceri içinde gerçek bir
+çalışma zamanı denetimi yapan **tek** test bu. Ama temizliğin doğru olduğunu
+(poly sayısı, kopuk parça sayısı) ÖLÇMEZ.
+
+## Sessiz hata riski
+
+Var. Temizlik "başarılı" döner ama agresif decimation siluet detayını yemiş
+olabilir; ya da floating island sayılan parça aslında kasıtlı bir aksesuardır.
+Çıktı poly sayısı ve bağlı bileşen sayısı loglanmalı, eşik dışı sapmada
+kalmalı — şu an loglanmıyor.
