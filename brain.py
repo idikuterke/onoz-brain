@@ -107,6 +107,31 @@ def days_since(iso: str) -> int:
     return max(0, (datetime.now(timezone.utc) - then).days)
 
 
+def find_brain_marker(start: Path, name: str) -> dict | None:
+    """cwd ve ust dizinlerde `name` projesine ait .brain.json ara.
+
+    projects.json yerel kaldigi icin (bkz. .gitignore) baska bir makinede
+    kayit bos olur. .brain.json proje agacinin icinde durur ve tasinir;
+    isim eslesirse projeyi oradan cozeriz. Yazma yok: kayit hala link'in isi.
+    """
+    for d in [start.resolve(), *start.resolve().parents]:
+        f = d / ".brain.json"
+        if not f.exists():
+            continue
+        data = read_json(f, default={})
+        if data.get("project") != name:
+            continue
+        ptype = data.get("type", "unknown")
+        return {
+            "path": str(d),
+            "type": ptype,
+            "tags": sorted(set(data.get("tags") or []) | {ptype}),
+            "linked": None,
+            "source": ".brain.json",
+        }
+    return None
+
+
 # --------------------------------------------------------------------------
 # Depo katmani
 # --------------------------------------------------------------------------
@@ -157,10 +182,20 @@ class Brain:
 
     def project(self, name: str) -> dict:
         projects = self.projects()
-        if name not in projects:
-            known = ", ".join(sorted(projects)) or "(kayitli proje yok)"
-            raise BrainError(f"Proje bulunamadi: {name}\nKayitli: {known}")
-        return projects[name]
+        if name in projects:
+            return projects[name]
+        # projects.json yerel ve repoda tasinmiyor (.gitignore). Baska makinede
+        # veya taze klonda kayit bos olur; proje icindeki .brain.json isaret
+        # dosyasi ayni bilgiyi tasir. Onu kabul et, link zorunlulugu kalksin.
+        marker = find_brain_marker(Path.cwd(), name)
+        if marker is not None:
+            return marker
+        known = ", ".join(sorted(projects)) or "(kayitli proje yok)"
+        raise BrainError(
+            f"Proje bulunamadi: {name}\n"
+            f"Kayitli: {known}\n"
+            f"Ipucu: proje dizininden calistir (.brain.json okunur) veya\n"
+            f"       python brain.py link {name} <yol> --type <tip>")
 
     # -- beceriler --------------------------------------------------------
 
