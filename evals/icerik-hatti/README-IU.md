@@ -1,4 +1,4 @@
-# icerik-uretim-hatti — eval seti
+# icerik-hatti — IU eval seti (bulut oturumundan birlestirildi)
 
 **Proje tipi:** python (deterministik uretim hatlari koleksiyonu)
 **Depo:** idikuterke/icerik-uretim-hatti — 11 hat, ortak cekirdek `core/` + `core_3d/`
@@ -9,7 +9,7 @@ Hattin kendisi yereldir (ComfyUI 127.0.0.1:8188, Blender 4.5, RX 7700 XT/ROCm). 
 seti **uretim kosmaz**; sozlesme/sema/kapi-kapsami denetler. Hepsi saf Python, GPU'suz,
 Linux ve Windows'ta ayni. Boylece regression orani donanima bagli dalgalanmaz.
 
-## Set (9 regression, baseline 9/9 = %100 — 2026-10-08)
+## Set (9 regression, bulut baseline 9/9; yerelde 8/9 — IU-04 gercek kapi hatalarini yakaliyor, 2026-10-08)
 
 | id | ne koruyor |
 |---|---|
