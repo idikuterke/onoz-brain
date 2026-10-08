@@ -1,0 +1,81 @@
+{
+  "ts": "2026-10-08T15:20:13+00:00",
+  "project": "icerik-hatti",
+  "passed": 12,
+  "total": 12,
+  "pass_rate": 1.0,
+  "results": [
+    {
+      "id": "IH-01",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "IH-02",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "IH-03",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "IU-01",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "IU-02",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "IU-03",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "IU-04",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "IU-05",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "IU-06",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "IU-07",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "IU-08",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    },
+    {
+      "id": "IU-09",
+      "ok": true,
+      "detail": "exit=0",
+      "kind": "regression"
+    }
+  ]
+}
